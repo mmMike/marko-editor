@@ -1,6 +1,6 @@
 # Marko Editor
 
-Marko Editor is a simple WYSIWYG editor for note taking written in Rust and GTK 4. It uses Markdown as storage format (with critics extension) and can open simple Markdown files. However, the main focus of Marko Editor is WYSIWYG note taking and not being a 100% compliant Markdown editor.
+Marko Editor is a simple WYSIWYG editor for note taking written in Rust and GTK 4. It uses Markdown as storage format (with critics extension) and can read simple Markdown files. However, the main focus of Marko Editor is WYSIWYG note taking and not being a 100% compliant Markdown editor.
 
 ![Marko Editor screenshot](./doc/marko-editor-screenshot.png?raw=true "Marko Editor")
 
@@ -24,7 +24,9 @@ While the source code is not perfect parts of it might serve as examples for GTK
 
 * Dynamic menu content depending on runtime data.
 
-* Structuring of the application for reuse and modularity - see also [GTK3 Patterns in Rust: Structure](https://blog.samwhited.com/2019/02/gtk3-patterns-in-rust-structure/).
+* Communication with UI thread from worker thread via channels - see also [MPSC Channel API for painless usage of threads with GTK in Rust](https://coaxion.net/blog/2019/02/mpsc-channel-api-for-painless-usage-of-threads-with-gtk-in-rust/)
+
+* Structuring of the application for re-use and modularity - see also [GTK3 Patterns in Rust: Structure](https://blog.samwhited.com/2019/02/gtk3-patterns-in-rust-structure/).
 
 ## Development Status
 
@@ -36,7 +38,7 @@ Alpha stage - incomplete, not ready for production.
 
 ### Linux
 
-* Make sure rust (latest stable) and the libs for gtk4 and x11 are installed.
+* Make sure rust (the latest stable version) and the libs for gtk4 and x11 are installed.
 
 * ``cargo run`` to compile and run the program.
 

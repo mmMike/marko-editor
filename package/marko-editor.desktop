@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Marko Editor
+GenericName=Markdown editor
+Comment=WYSIWYG Markdown editor
+Exec=marko-editor %F
+Icon=marko-editor
+Terminal=false
+Type=Application
+StartupNotify=false
+Categories=Application;Office;WordProcessor;
+MimeType=text/x-markdown;text/*;

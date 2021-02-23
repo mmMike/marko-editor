@@ -1,0 +1,31 @@
+# Maintainer: Your Name <youremail@domain.com>
+pkgname=marko-editor
+pkgver=0.1
+pkgrel=1
+epoch=
+pkgdesc=""
+arch=("i686" "x86_64")
+url=""
+license=('Proprietary')
+groups=()
+depends=()
+makedepends=()
+checkdepends=()
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+source=("marko-editor.tar.gz")
+noextract=()
+md5sums=()
+validpgpkeys=()
+
+package() {
+    make DESTDIR=$pkgdir/usr
+    rm $pkgdir/usr/.crates2.json
+    rm $pkgdir/usr/.crates.toml
+}

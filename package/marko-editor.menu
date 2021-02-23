@@ -1,0 +1,7 @@
+?package(marko-editor):\
+    needs="x11"\
+    section="Applications/Editors"\
+    title="Marko Editor"\
+    longtitle="WYSIWYG Markdown editor"\
+    icon="/usr/share/pixmaps/marko-editor.xpm"\
+    command="/usr/bin/marko-editor"

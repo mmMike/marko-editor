@@ -1,0 +1,29 @@
+[package]
+name = "marko-editor"
+version = "0.1.0"
+authors = ["Michael <info@marko-editor.com>"]
+edition = "2018"
+
+[dependencies]
+reqwest = { version = "0.11.*", features = ["blocking"] }
+configparser = "2.0.*"
+x11 = "2.18.*"
+anyhow = "1.0.*"
+bitflags = "1.2.*"
+log = "0.4"
+pulldown-cmark = { version = "0.8", default-features = false, features = ["simd"] }
+regex = "1"
+lazy_static = "1.4.0"
+html-escape = "0.2.6"
+
+[dependencies.gtk]
+git = "https://github.com/gtk-rs/gtk4-rs"
+package = "gtk4"
+
+[dependencies.gdk]
+git = "https://github.com/gtk-rs/gtk4-rs"
+package = "gdk4"
+
+[dependencies.gdk4-x11]
+git = "https://github.com/gtk-rs/gtk4-rs"
+package = "gdk4-x11"
