@@ -91,7 +91,7 @@ impl Settings {
             let config = self.config.borrow();
             let map = config.get_map_ref();
             if let Some(bookmarks) = map.get(BOOKMARKS) {
-                for (_, i) in bookmarks {
+                for i in bookmarks.values() {
                     if let Some(value) = i {
                         if value == link {
                             return Err(anyhow!("Bookmark already set for: {}", link));
@@ -133,7 +133,7 @@ impl Settings {
     pub fn get_bookmarks(&self) -> Vec<String> {
         let mut res: Vec<String> = Vec::new();
         if let Some(bookmarks) = self.config.borrow().get_map_ref().get(BOOKMARKS) {
-            for (_, i) in bookmarks {
+            for i in bookmarks.values() {
                 if let Some(value) = i {
                     res.push(value.to_string());
                 }
