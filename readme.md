@@ -1,6 +1,6 @@
 # Marko Editor
 
-Marko Editor is a simple WYSIWYG editor for note taking written in Rust and GTK 4. It uses Markdown as storage format (with critics extension) and can read simple Markdown files. However, the main focus of Marko Editor is WYSIWYG note taking and not being a 100% compliant Markdown editor.
+Marko Editor is a simple WYSIWYG editor for note taking written in Rust and GTK 4. It uses Markdown as storage format and can read simple Markdown files. However, the main focus of Marko Editor is WYSIWYG note taking and not being a 100% compliant Markdown editor.
 
 ![Marko Editor screenshot](./doc/marko-editor-screenshot.png?raw=true "Marko Editor")
 
@@ -16,7 +16,7 @@ Marko Editor is a learning project driven by my personal note taking requirement
 
 ### Interesting Rust and GTK Parts
 
-While the source code is not perfect parts of it might serve as examples for GTK 4 development:
+While the source code is not perfect, parts of it might serve as examples for GTK 4 development with Rust:
 
 * Clean state management for UI callbacks with macros. Only one ``connect!`` call per callback similar to Qt.
 
@@ -28,9 +28,37 @@ While the source code is not perfect parts of it might serve as examples for GTK
 
 * Structuring of the application for re-use and modularity - see also [GTK3 Patterns in Rust: Structure](https://blog.samwhited.com/2019/02/gtk3-patterns-in-rust-structure/).
 
+--- ---- ----- ------- ----- ---- ---
+
+# Extras for Note Taking
+
+* WYSIWYG editing with clean diffable file format (Markdown with [CriticMarkup](http://criticmarkup.com/))
+
+* Colors for special highlights
+
+* Link titles are fetched automatically
+
+* A start page can be defined to access the most important notes right after starting
+
+* Bookmarks to important note documents
+
+--- ---- ----- ------- ----- ---- ---
+
 ## Development Status
 
-Alpha stage - incomplete, not ready for production.
+**Alpha stage - incomplete, not ready for production.**
+
+If you want to use it anyway, these are some of the issues to look out for:
+
+* Sometimes crash when moving the mouse over the settings menu. Currently not sure, if this might be a GTK issue.
+
+* The undo/redo stack currently doesn't know about the formatting.
+
+* The formatting works currently only on existing text and not directly while typing.
+
+* Search functionality and outline are still missing.
+
+* Restoring the window position is not 100% reliable.
 
 --- ---- ----- ------- ----- ---- ---
 
