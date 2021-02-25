@@ -22,7 +22,21 @@ pub trait TextBufferMd {
     fn assign_markup(&self, markup: &str) -> &gtk::TextBuffer;
     fn assign_markdown(&self, markdown: &str, buffer_is_modified: bool) -> &gtk::TextBuffer;
     fn apply_tag_offset(&self, iter: &mut gtk::TextIter, tag_name: &str, start_offset: i32);
-    fn apply_link_offset(&self, iter: &mut gtk::TextIter, link: &str, start_offset: i32);
+    // ToDo: duplicated code for image and link
+    fn apply_image_offset(
+        &self,
+        iter: &mut gtk::TextIter,
+        image: &str,
+        title: &str,
+        start_offset: i32,
+    );
+    fn apply_link_offset(
+        &self,
+        iter: &mut gtk::TextIter,
+        link: &str,
+        title: &str,
+        start_offset: i32,
+    );
 
     fn convert_colors(&self, tag: &str, pos_start: i32);
 }
@@ -46,6 +60,7 @@ impl TextBufferMd for gtk::TextBuffer {
         let mut next_open: Vec<&str> = vec![];
 
         let mut newline_count = 0; // empty consecutive newlines in the editor
+        let mut has_image = false;
         let mut has_link = false;
         let mut in_code_block = false;
         let mut formatted = true;
@@ -79,6 +94,15 @@ impl TextBufferMd for gtk::TextBuffer {
 
             // closing tags before new opening tags
             let off_tags = it.get_toggled_tags(false);
+            if has_image {
+                for tag in &off_tags {
+                    if let Some(image) = tag.get_image() {
+                        has_image = false;
+                        s += format!("]({})", image.as_str()).as_ref();
+                        continue;
+                    }
+                }
+            }
             if has_link {
                 for tag in &off_tags {
                     if let Some(link) = tag.get_link() {
@@ -131,6 +155,7 @@ impl TextBufferMd for gtk::TextBuffer {
             }
 
             let on_tags = it.get_toggled_tags(true);
+            let mut handle_image = false;
             let mut handle_link = false;
             // check first if we enter an unformatted block
             let mut stop_formatting_here = false;
@@ -159,6 +184,9 @@ impl TextBufferMd for gtk::TextBuffer {
                     if let Some(diff) = TextTagTable::md_start_tag(name.as_str()) {
                         open.push(name);
                         next_open.push(diff);
+                    } else if tag.get_image().is_some() {
+                        has_image = true;
+                        handle_image = true;
                     } else if tag.get_link().is_some() {
                         has_link = true;
                         handle_link = true;
@@ -168,6 +196,9 @@ impl TextBufferMd for gtk::TextBuffer {
 
             for t in next_open.drain(..) {
                 s += t;
+            }
+            if handle_image {
+                s += "![";
             }
             if handle_link {
                 s += "[";
@@ -221,6 +252,7 @@ impl TextBufferMd for gtk::TextBuffer {
         let parser = Parser::new_ext(markdown, options);
 
         let mut pos_heading = 0;
+        let mut pos_image = 0;
         let mut pos_link = 0;
         let mut pos_bold = 0;
         let mut pos_italic = 0;
@@ -245,6 +277,7 @@ impl TextBufferMd for gtk::TextBuffer {
                             self.insert(iter, "    ".repeat(list_ident).as_str());
                         }
                     }
+                    CTag::Image(..) => pos_image = iter.get_offset(),
                     CTag::Link(..) => pos_link = iter.get_offset(),
                     CTag::List(number) => {
                         list_number.push(number);
@@ -301,7 +334,12 @@ impl TextBufferMd for gtk::TextBuffer {
                             self.insert(iter, NEWLINE);
                         }
                     }
-                    CTag::Link(_, link, _) => self.apply_link_offset(iter, link.as_ref(), pos_link),
+                    CTag::Image(_, image, title) => {
+                        self.apply_image_offset(iter, image.as_ref(), title.as_ref(), pos_image)
+                    }
+                    CTag::Link(_, link, title) => {
+                        self.apply_link_offset(iter, link.as_ref(), title.as_ref(), pos_link)
+                    }
                     CTag::List(_) => {
                         list_ident -= 1;
                         list_number.pop();
@@ -400,10 +438,37 @@ impl TextBufferMd for gtk::TextBuffer {
         }
     }
 
-    fn apply_link_offset(&self, iter: &mut gtk::TextIter, link: &str, start_offset: i32) {
+    fn apply_image_offset(
+        &self,
+        iter: &mut gtk::TextIter,
+        image: &str,
+        title: &str,
+        start_offset: i32,
+    ) {
         let mut start = iter.clone();
         start.backward_chars(iter.get_offset() - start_offset);
-        let tag = self.create_link_tag(link);
+        let tag = if title.is_empty() {
+            self.create_image_tag(image)
+        } else {
+            self.create_image_tag(format!("{} \"{}\"", image, title).as_str())
+        };
+        self.apply_tag(&tag, &start, &iter);
+    }
+
+    fn apply_link_offset(
+        &self,
+        iter: &mut gtk::TextIter,
+        link: &str,
+        title: &str,
+        start_offset: i32,
+    ) {
+        let mut start = iter.clone();
+        start.backward_chars(iter.get_offset() - start_offset);
+        let tag = if title.is_empty() {
+            self.create_link_tag(link)
+        } else {
+            self.create_link_tag(format!("{} \"{}\"", link, title).as_str())
+        };
         self.apply_tag(&tag, &start, &iter);
     }
 
@@ -517,6 +582,8 @@ mod tests {
             "[Marko Editor](http://www.marko-editor.com)\n",
             "**[Marko Editor]**(http://www.marko-editor.com)\n",
             "{==**[Marko Editor]**==}(http://www.marko-editor.com)\n",
+            "![Marko Editor screenshot](./doc/marko-editor-screenshot.png?raw=true)\n",
+            "![Marko Editor screenshot](./doc/marko-editor-screenshot.png?raw=true \"Marko Editor\")\n",
             "```\nfor (int i=0; i<10; ++i) {\n    std::cout << i << std::endl;\n}\n```\n\n```\nOne\n\nTwo\n\n\nThree\n\n\n\nDone\n```\n",
             "**Bold**\n\n```\nfor (int i=0; i<10; ++i) {\n    std::cout << i << std::endl;\n}\n```\n\n* Item One\n\n* Item Two\n",
             "{++{==Hallo **Welt!**==}++}\n",

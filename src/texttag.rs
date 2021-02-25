@@ -1,4 +1,4 @@
-use crate::textbufferext::LINK_DIVIDER;
+use crate::textbufferext::{IMAGE_START, LINK_START};
 use gtk::TextTagExt;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -66,6 +66,7 @@ impl Tag {
 pub trait TextTagExt2 {
     fn get_name(&self) -> String;
 
+    fn get_image(&self) -> Option<String>;
     fn get_link(&self) -> Option<String>;
 
     fn is_par_format(&self) -> bool;
@@ -76,10 +77,21 @@ impl TextTagExt2 for gtk::TextTag {
         String::from(self.get_property_name().unwrap().as_str())
     }
 
+    fn get_image(&self) -> Option<String> {
+        let mut name = self.get_name();
+        if name.starts_with(IMAGE_START) {
+            name.replace_range(..6, "");
+            Some(name)
+        } else {
+            None
+        }
+    }
+
     fn get_link(&self) -> Option<String> {
-        let name = self.get_name();
-        if let Some(idx) = name.find(LINK_DIVIDER) {
-            Some(String::from(&name[idx + 1..]))
+        let mut name = self.get_name();
+        if name.starts_with(LINK_START) {
+            name.replace_range(..5, "");
+            Some(name)
         } else {
             None
         }

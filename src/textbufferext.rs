@@ -5,12 +5,17 @@ use gtk::TextBufferExt;
 use gtk::TextIter;
 use gtk::TextTagExt;
 
-pub const LINK_DIVIDER: char = ':';
+pub const LINK_START: &str = "LINK:";
+pub const IMAGE_START: &str = "IMAGE:";
 
 pub trait TextBufferExt2 {
     fn get_current_word_bounds(&self) -> Option<(TextIter, TextIter)>;
 
     fn get_insert_iter(&self) -> TextIter;
+
+    // ToDo: duplicated code for image and link
+    fn create_image_tag(&self, link: &str) -> gtk::TextTag;
+    fn get_image_at_iter(&self, iter: &gtk::TextIter) -> Option<(String, gtk::TextTag)>;
 
     fn create_link_tag(&self, link: &str) -> gtk::TextTag;
     fn get_link_at_iter(&self, iter: &gtk::TextIter) -> Option<(String, gtk::TextTag)>;
@@ -38,9 +43,43 @@ impl TextBufferExt2 for gtk::TextBuffer {
         self.get_iter_at_mark(&self.get_insert())
     }
 
+    fn create_image_tag(&self, link: &str) -> gtk::TextTag {
+        // ToDo: this lookup might be slow
+        let name = format!("{}{}", IMAGE_START, link);
+        let table = &self.get_tag_table();
+        if let Some(tag) = table.lookup(&name) {
+            tag
+        } else {
+            static GREEN: gdk::RGBA =
+                gdk::RGBA { red: 0f32, green: 0.75f32, blue: 0f32, alpha: 1f32 };
+            let link_tag = TextTagTable::create_tag(&name, table);
+            link_tag.set_property_underline(gtk::pango::Underline::Single);
+            link_tag.set_property_foreground_rgba(Some(&GREEN));
+            link_tag
+        }
+    }
+
+    fn get_image_at_iter(&self, iter: &TextIter) -> Option<(String, gtk::TextTag)> {
+        let tags = iter.get_tags();
+        for tag in tags {
+            if let Some(image) = tag.get_image() {
+                return Some((image, tag));
+            }
+        }
+        // the link should also be found with the cursor at the end of the tag
+        let tags = iter.get_toggled_tags(false);
+        for tag in tags {
+            if let Some(image) = tag.get_image() {
+                return Some((image, tag));
+            }
+        }
+
+        None
+    }
+
     fn create_link_tag(&self, link: &str) -> gtk::TextTag {
         // ToDo: this lookup might be slow
-        let name = format!("DATA{}{}", LINK_DIVIDER, link);
+        let name = format!("{}{}", LINK_START, link);
         let table = &self.get_tag_table();
         if let Some(tag) = table.lookup(&name) {
             tag
