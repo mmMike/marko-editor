@@ -87,6 +87,17 @@
                                 </layout>
                             </object>
                         </child>
+                        <child>
+                            <object class="GtkToggleButton" id="btn_is_image">
+                                <property name="icon-name">image-x-generic-symbolic</property>
+                                <property name="tooltip-text" translatable="yes">Hyperlink or image reference?</property>
+                                <property name="has-frame">false</property>
+                                <layout>
+                                    <property name="column">3</property>
+                                    <property name="row">0</property>
+                                </layout>
+                            </object>
+                        </child>
                     </object>
                 </child>
             </object>

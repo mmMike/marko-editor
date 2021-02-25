@@ -33,6 +33,7 @@ mod keys {
 pub struct LinkData {
     text: String,
     link: String,
+    is_image: bool,
 }
 
 type OpenLinkCb = Rc<RefCell<Box<dyn Fn(&str)>>>;
@@ -87,6 +88,7 @@ struct LinkEdit {
     btn_accept_link: gtk::Button,
     btn_cancel_link: gtk::Button,
     btn_fetch_title: gtk::Button,
+    btn_is_image: gtk::ToggleButton,
     accept_link_cb: AcceptLinkCb,
 }
 
@@ -99,10 +101,11 @@ impl LinkEdit {
             btn_accept_link: builder_get!(b("btn_accept_link")),
             btn_cancel_link: builder_get!(b("btn_cancel_link")),
             btn_fetch_title: builder_get!(b("btn_fetch_title")),
+            btn_is_image: builder_get!(b("btn_is_image")),
             accept_link_cb: Rc::new(RefCell::new(Box::new(|_| {}))),
         };
-        this.btn_accept_link.connect_clicked(connect!(this.accept_link()));
-        this.btn_cancel_link.connect_clicked(connect!(this.reject_link()));
+        this.btn_accept_link.connect_clicked(connect!(this.accept()));
+        this.btn_cancel_link.connect_clicked(connect!(this.reject()));
         this.btn_fetch_title.connect_clicked(connect!(this.fetch_title()));
         this
     }
@@ -115,6 +118,7 @@ impl LinkEdit {
         self.edt_link_name.set_text(&link_data.text);
         self.edt_link_target.set_text(&link_data.link);
         self.link_edit_bar.set_search_mode(true);
+        self.btn_is_image.set_active(link_data.is_image);
 
         if link_data.link.is_empty() {
             lazy_static! {
@@ -132,16 +136,23 @@ impl LinkEdit {
         }
     }
 
-    pub fn accept_link(&self) {
+    pub fn accept(&self) {
         self.hide();
         let link_data = LinkData {
-            text: self.edt_link_name.get_text().parse().unwrap(),
-            link: self.edt_link_target.get_text().parse().unwrap(),
+            text: self
+                .edt_link_name
+                .get_text()
+                .as_str()
+                .split_whitespace()
+                .collect::<Vec<&str>>()
+                .join(" "),
+            link: String::from(self.edt_link_target.get_text().as_str().trim()),
+            is_image: self.btn_is_image.get_active(),
         };
         (self.accept_link_cb.borrow())(Some(&link_data));
     }
 
-    pub fn reject_link(&self) {
+    pub fn reject(&self) {
         self.hide();
         (self.accept_link_cb.borrow())(None);
     }
@@ -357,8 +368,8 @@ impl TextView {
                 // just Enter/Return is swallowed by the entries, but this enables every modifier
                 // to make them work
                 match key {
-                    keys::Escape => this.link_edit.reject_link(),
-                    keys::KP_Enter | keys::Return => this.link_edit.accept_link(),
+                    keys::Escape => this.link_edit.reject(),
+                    keys::KP_Enter | keys::Return => this.link_edit.accept(),
                     _ => return Inhibit(false),
                 }
                 Inhibit(true)
@@ -503,7 +514,11 @@ impl TextView {
             buffer.insert(&mut end, &data.text);
             start = buffer.get_iter_at_mark(&self.link_start);
 
-            let tag = buffer.create_link_tag(&data.link);
+            let tag = if data.is_image {
+                buffer.create_image_tag(&data.link)
+            } else {
+                buffer.create_link_tag(&data.link)
+            };
             buffer.apply_tag(&tag, &start, &end);
         }
     }
@@ -516,6 +531,7 @@ impl TextView {
         let mut start = self.buffer.get_iter_at_mark(&self.buffer.get_insert());
         let mut end = start.clone();
         let mut link = String::new();
+        let mut is_image = false;
         if let Some((l, tag)) = self.buffer.get_link_at_iter(&start) {
             link = l;
             if !start.starts_tag(Some(&tag)) {
@@ -524,6 +540,15 @@ impl TextView {
             if !end.ends_tag(Some(&tag)) {
                 end.forward_to_tag_toggle(Some(&tag));
             }
+        } else if let Some((l, tag)) = self.buffer.get_image_at_iter(&start) {
+            link = l;
+            if !start.starts_tag(Some(&tag)) {
+                start.backward_to_tag_toggle(Some(&tag));
+            }
+            if !end.ends_tag(Some(&tag)) {
+                end.forward_to_tag_toggle(Some(&tag));
+            }
+            is_image = true;
         } else if let Some((s, e)) = self.buffer.get_selection_bounds() {
             start = s;
             end = e;
@@ -548,7 +573,7 @@ impl TextView {
         self.buffer.move_mark(&self.link_end, &end);
         let text = String::from(self.buffer.get_text(&start, &end, false).as_str());
 
-        let old_link = LinkData { text, link };
+        let old_link = LinkData { text, link, is_image };
         self.link_edit.edit_link(&old_link);
         self.set_editable(false);
     }
