@@ -1,3 +1,4 @@
+use crate::textbufferext::LINK_DIVIDER;
 use gtk::TextTagExt;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -35,8 +36,6 @@ impl Tag {
 
     pub const CODE: &'static str = "code";
 
-    pub const LINK: &'static str = "link";
-
     pub const BOLD: &'static str = "weight=700";
     pub const ITALIC: &'static str = "style=2";
     pub const MONO: &'static str = "family=Monospace";
@@ -67,12 +66,23 @@ impl Tag {
 pub trait TextTagExt2 {
     fn get_name(&self) -> String;
 
+    fn get_link(&self) -> Option<String>;
+
     fn is_par_format(&self) -> bool;
 }
 
 impl TextTagExt2 for gtk::TextTag {
     fn get_name(&self) -> String {
         String::from(self.get_property_name().unwrap().as_str())
+    }
+
+    fn get_link(&self) -> Option<String> {
+        let name = self.get_name();
+        if let Some(idx) = name.find(LINK_DIVIDER) {
+            Some(String::from(&name[idx + 1..]))
+        } else {
+            None
+        }
     }
 
     fn is_par_format(&self) -> bool {

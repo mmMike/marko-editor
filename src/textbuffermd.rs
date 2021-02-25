@@ -1,5 +1,6 @@
+use crate::textbufferext::TextBufferExt2;
 use crate::texttag::{Tag, TextTagExt2};
-use crate::texttagtable::{TextTagTable, LINK_DIVIDER};
+use crate::texttagtable::TextTagTable;
 use gtk::TextBufferExt;
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser};
 
@@ -80,10 +81,9 @@ impl TextBufferMd for gtk::TextBuffer {
             let off_tags = it.get_toggled_tags(false);
             if has_link {
                 for tag in &off_tags {
-                    let name = tag.get_name();
-                    if let Some(idx) = name.find(LINK_DIVIDER) {
+                    if let Some(link) = tag.get_link() {
                         has_link = false;
-                        s += format!("]({})", &name[idx + 1..]).as_ref();
+                        s += format!("]({})", link.as_str()).as_ref();
                         continue;
                     }
                 }
@@ -159,7 +159,7 @@ impl TextBufferMd for gtk::TextBuffer {
                     if let Some(diff) = TextTagTable::md_start_tag(name.as_str()) {
                         open.push(name);
                         next_open.push(diff);
-                    } else if name.find(LINK_DIVIDER).is_some() {
+                    } else if tag.get_link().is_some() {
                         has_link = true;
                         handle_link = true;
                     }
@@ -403,9 +403,8 @@ impl TextBufferMd for gtk::TextBuffer {
     fn apply_link_offset(&self, iter: &mut gtk::TextIter, link: &str, start_offset: i32) {
         let mut start = iter.clone();
         start.backward_chars(iter.get_offset() - start_offset);
-        let tag = TextTagTable::create_link_tag(link, &self.get_tag_table());
+        let tag = self.create_link_tag(link);
         self.apply_tag(&tag, &start, &iter);
-        self.apply_tag(&self.get_tag_table().lookup(Tag::LINK).unwrap(), &start, &iter);
     }
 
     // Convert markup for colors to the corresponding formatting and delete the markup

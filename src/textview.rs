@@ -2,7 +2,6 @@ use crate::textbufferext::TextBufferExt2;
 use crate::textbuffermd::TextBufferMd;
 use crate::texttag::{CharFormat, ParFormat, Tag, TextTagExt2};
 use crate::texttagmanager::{TextEdit, TextTagManager};
-use crate::texttagtable::TextTagTable;
 use crate::textviewext::TextViewExt2;
 use crate::{builder_get, connect, connect_fwd1};
 
@@ -504,9 +503,8 @@ impl TextView {
             buffer.insert(&mut end, &data.text);
             start = buffer.get_iter_at_mark(&self.link_start);
 
-            let tag = TextTagTable::create_link_tag(&data.link, &self.buffer.get_tag_table());
+            let tag = buffer.create_link_tag(&data.link);
             buffer.apply_tag(&tag, &start, &end);
-            buffer.apply_tag(&buffer.get_tag_table().lookup(Tag::LINK).unwrap(), &start, &end);
         }
     }
 

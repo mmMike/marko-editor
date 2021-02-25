@@ -9,8 +9,6 @@
 use crate::texttag::Tag;
 use gtk::TextTagExt;
 
-pub const LINK_DIVIDER: char = ':';
-
 #[derive(Debug)]
 pub struct TextTagTable {
     table: gtk::TextTagTable,
@@ -68,11 +66,6 @@ impl TextTagTable {
         tag_h6.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
         tag_h6.set_property_size_points(14f64);
 
-        let tag_link = TextTagTable::create_tag(Tag::LINK, &table);
-        tag_link.set_property_underline(gtk::pango::Underline::Single);
-        let blue = gdk::RGBA { red: 0f32, green: 0f32, blue: 1f32, alpha: 1f32 };
-        tag_link.set_property_foreground_rgba(Some(&blue));
-
         let tag_bold = TextTagTable::create_tag(Tag::BOLD, &table);
         tag_bold.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
 
@@ -117,16 +110,6 @@ impl TextTagTable {
         let tag = gtk::TextTag::new(Some(name));
         table.add(&tag);
         tag
-    }
-
-    pub fn create_link_tag(link: &str, table: &gtk::TextTagTable) -> gtk::TextTag {
-        // ToDo: this lookup might be slow
-        let name = format!("DATA{}{}", LINK_DIVIDER, link);
-        if let Some(tag) = table.lookup(&name) {
-            tag
-        } else {
-            TextTagTable::create_tag(&name, table)
-        }
     }
 
     pub fn get_tag_table(&self) -> &gtk::TextTagTable {
