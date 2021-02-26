@@ -72,7 +72,7 @@ If you want to use it anyway, these are some of the issues to look out for:
 
     * Might support additional diagramming tools (PlantUML, Mermaid, ...)
 
-* Document in document
+* Knowledge maps (document in document, similar to OneNote)
 
 --- ---- ----- ------- ----- ---- ---
 
