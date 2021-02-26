@@ -6,7 +6,7 @@ Marko Editor is a simple WYSIWYG editor for note taking written in Rust and GTK 
 
 ## Background
 
-Marko Editor is a learning project driven by my personal note taking requirements. Coming from a C++ and Qt background this is my first deeper venture into Rust and GTK. So you should expect some short cummings in the source code:
+Marko Editor is a learning project driven by my personal note taking requirements. Coming from a C++ and Qt background this is my first deeper venture into Rust and GTK. So you should expect some shortcomings in the source code:
 
 * Not (yet) idiomatic in several places.
 
@@ -30,7 +30,7 @@ While the source code is not perfect, parts of it might serve as examples for GT
 
 --- ---- ----- ------- ----- ---- ---
 
-# Extras for Note Taking
+## Extras for Note Taking
 
 * WYSIWYG editing with clean diffable file format (Markdown with [CriticMarkup](http://criticmarkup.com/))
 
@@ -56,9 +56,23 @@ If you want to use it anyway, these are some of the issues to look out for:
 
 * The formatting works currently only on existing text and not directly while typing.
 
-* Search functionality and outline are still missing.
-
 * Restoring the window position is not 100% reliable.
+
+### Planned Features
+
+**Additional to the known shortcomings, in no particular order and time frame.**
+
+* Document outline
+
+* Image embedding (not only image reference editing like currently)
+
+    * Snippet tool (screenshot with crop)
+
+    * Might support Latex formulas
+
+    * Might support additional diagramming tools (PlantUML, Mermaid, ...)
+
+* Document in document
 
 --- ---- ----- ------- ----- ---- ---
 
@@ -72,7 +86,9 @@ If you want to use it anyway, these are some of the issues to look out for:
 
 * ``make DESTDIR=package/usr`` creates the contents for a standard installation on Linux.
 
-* ``PKGBUILD`` for Arch Linux is supplied.
+* **Arch Linux**: ``PKGBUILD`` is supplied.
+
+* **Fedora** (Rawhide): ``dnf install graphene-devel gtk4-devel libX11-devel``
 
 --- ---- ----- ------- ----- ---- ---
 
