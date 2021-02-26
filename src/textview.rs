@@ -174,12 +174,153 @@ impl LinkEdit {
     }
 }
 
+type AccessViewCb = Rc<Box<dyn Fn() -> gtk::TextView>>;
+
+#[derive(Clone)]
+struct SearchBar {
+    search_bar: gtk::SearchBar,
+    edt_search: gtk::SearchEntry,
+    btn_close_search: gtk::Button,
+    access_view_cb: AccessViewCb,
+}
+
+impl SearchBar {
+    // https://python-gtk-3-tutorial.readthedocs.io/en/latest/textview.html
+    pub fn new<F: Fn() -> gtk::TextView + 'static>(b: &gtk::Builder, access_view_cb: F) -> Self {
+        let this = Self {
+            search_bar: builder_get!(b("search_bar")),
+            edt_search: builder_get!(b("edt_search")),
+            btn_close_search: builder_get!(b("btn_close_search")),
+            access_view_cb: Rc::new(Box::new(access_view_cb)),
+        };
+        this.search_bar.connect_entry(&this.edt_search);
+        this.search_bar.connect_property_search_mode_enabled_notify(connect!(this.on_enabled()));
+
+        this.edt_search.connect_activate(connect!(this.on_next_match(false)));
+        this.edt_search.connect_next_match(connect!(this.on_next_match(false)));
+        this.edt_search.connect_previous_match(connect!(this.on_next_match(true)));
+        this.edt_search.connect_search_changed(connect!(this.on_search_changed()));
+
+        this.btn_close_search.connect_clicked(connect!(this.hide()));
+
+        this
+    }
+
+    pub fn is_open(&self) -> bool {
+        self.search_bar.get_search_mode()
+    }
+    pub fn hide(&self) {
+        self.search_bar.set_search_mode(false);
+    }
+    pub fn open(&self, text_view: &gtk::TextView) {
+        self.search_bar.set_search_mode(true);
+        self.search_bar.set_key_capture_widget(Some(text_view));
+    }
+
+    fn on_enabled(&self) {
+        if !self.is_open() {
+            self.clear_highlight();
+            self.search_bar.get_key_capture_widget().grab_focus();
+            self.search_bar.set_key_capture_widget::<gtk::Widget>(None);
+        }
+    }
+
+    fn on_next_match(&self, backward: bool) {
+        let buffer = self.get_buffer();
+        let text = String::from(self.edt_search.get_text().as_str().trim());
+        if text.is_empty() {
+            return;
+        }
+
+        let mut cursor = buffer.get_insert_iter();
+        // get_selection_bounds retrieves the iterators in order
+        if let Some((start, end)) = buffer.get_selection_bounds() {
+            if backward {
+                cursor = start;
+            } else {
+                cursor = end;
+            }
+        }
+        let view: gtk::TextView = (self.access_view_cb)();
+        let mut wrap_around = true;
+        loop {
+            if let Some((mut start, end)) = if backward {
+                cursor.backward_search(text.as_str(), gtk::TextSearchFlags::CASE_INSENSITIVE, None)
+            } else {
+                cursor.forward_search(text.as_str(), gtk::TextSearchFlags::CASE_INSENSITIVE, None)
+            } {
+                buffer.select_range(&start, &end);
+                view.scroll_to_iter(&mut start, 0.05, false, 0., 0.);
+                return;
+            } else {
+                if wrap_around {
+                    if backward {
+                        cursor = buffer.get_end_iter();
+                    } else {
+                        cursor = buffer.get_start_iter();
+                    }
+                    wrap_around = false;
+                    continue;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    fn on_search_changed(&self) {
+        self.clear_highlight();
+
+        let buffer = self.get_buffer();
+        let tag = buffer.get_tag_table().lookup(Tag::SEARCH).unwrap();
+        let text = String::from(self.edt_search.get_text().as_str().trim());
+        if text.is_empty() {
+            return;
+        }
+
+        // move view
+        let cursor = buffer.get_insert_iter();
+        let view: gtk::TextView = (self.access_view_cb)();
+        if let Some((mut start, end)) =
+            cursor.forward_search(text.as_str(), gtk::TextSearchFlags::CASE_INSENSITIVE, None)
+        {
+            buffer.select_range(&start, &end);
+            view.scroll_to_iter(&mut start, 0.05, false, 0., 0.);
+        } else if let Some((mut start, end)) =
+            cursor.backward_search(text.as_str(), gtk::TextSearchFlags::CASE_INSENSITIVE, None)
+        {
+            buffer.select_range(&start, &end);
+            view.scroll_to_iter(&mut start, 0.05, false, 0., 0.);
+        }
+
+        // highlight all
+        let mut iter = buffer.get_start_iter();
+        while let Some((start, end)) =
+            iter.forward_search(text.as_str(), gtk::TextSearchFlags::CASE_INSENSITIVE, None)
+        {
+            buffer.apply_tag(&tag, &start, &end);
+            iter = end;
+        }
+    }
+
+    fn clear_highlight(&self) {
+        let buffer = self.get_buffer();
+        let (start, end) = buffer.get_bounds();
+        buffer.remove_tag_by_name(Tag::SEARCH, &start, &end);
+    }
+
+    fn get_buffer(&self) -> gtk::TextBuffer {
+        (self.access_view_cb)().get_buffer()
+    }
+}
+
 #[derive(Clone)]
 pub struct TextView {
     buffer: gtk::TextBuffer,
     tags: Rc<TextTagManager>, // Rc needed for clones in closures
     textview: gtk::TextView,
     link_edit: Rc<LinkEdit>,
+    search_bar: Rc<SearchBar>,
     activate_link_cb: OpenLinkCb,
     top_level: gtk::Widget,
     is_editable: Rc<RefCell<bool>>,
@@ -210,6 +351,10 @@ impl TextView {
         textview.set_has_tooltip(true);
 
         let link_edit = Rc::new(LinkEdit::new(&b));
+        let search_bar = Rc::new(SearchBar::new(&b, {
+            let t = textview.clone();
+            move || -> gtk::TextView { t.clone() }
+        }));
 
         let b: gtk::Box = builder_get!(b("container"));
         let top_level = b.upcast::<gtk::Widget>();
@@ -224,6 +369,7 @@ impl TextView {
             tags,
             textview,
             link_edit,
+            search_bar,
             top_level,
             activate_link_cb,
             is_editable: Rc::new(RefCell::from(true)),
@@ -255,6 +401,10 @@ impl TextView {
 
     pub fn get_widget(&self) -> &gtk::Widget {
         &self.top_level
+    }
+
+    pub fn add_text_style_provider<P: IsA<gtk::StyleProvider>>(&self, provider: &P, priority: u32) {
+        self.textview.get_style_context().add_provider(provider, priority);
     }
 
     pub fn get_modified(&self) -> bool {
@@ -318,6 +468,7 @@ impl TextView {
                         keys::b => this.char_format(CharFormat::BOLD),
                         keys::d => this.char_format(CharFormat::STRIKE),
                         keys::i => this.char_format(CharFormat::ITALIC),
+                        keys::f => this.open_search(),
                         keys::l => this.edit_link(),
                         keys::n => this.apply_text_clear(),
                         keys::t => this.char_format(CharFormat::MONO),
@@ -368,7 +519,10 @@ impl TextView {
                 // just Enter/Return is swallowed by the entries, but this enables every modifier
                 // to make them work
                 match key {
-                    keys::Escape => this.link_edit.reject(),
+                    keys::Escape => {
+                        this.link_edit.reject();
+                        this.search_bar.hide();
+                    }
                     keys::KP_Enter | keys::Return => this.link_edit.accept(),
                     _ => return Inhibit(false),
                 }
@@ -574,8 +728,18 @@ impl TextView {
         let text = String::from(self.buffer.get_text(&start, &end, false).as_str());
 
         let old_link = LinkData { text, link, is_image };
+        self.search_bar.hide();
         self.link_edit.edit_link(&old_link);
         self.set_editable(false);
+    }
+
+    pub fn open_search(&self) {
+        if self.search_bar.is_open() {
+            self.search_bar.hide();
+        } else {
+            self.link_edit.reject();
+            self.search_bar.open(&self.textview);
+        }
     }
 
     pub fn undo(&self) {
@@ -607,6 +771,7 @@ impl TextView {
         self.buffer.begin_irreversible_action();
         self.buffer.assign_markdown(markdown, false);
         self.buffer.end_irreversible_action();
+        self.buffer.place_cursor(&self.buffer.get_start_iter());
     }
 
     fn dump(&self) {
@@ -620,5 +785,6 @@ impl TextView {
         let markdown = self.to_markdown();
         self.buffer.assign_markdown(&markdown, true);
         self.buffer.end_irreversible_action();
+        self.buffer.place_cursor(&self.buffer.get_start_iter());
     }
 }

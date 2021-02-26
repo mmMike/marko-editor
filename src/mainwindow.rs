@@ -23,7 +23,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 const CSS: &str = r#"
-* {
+textview {
     font-size: 12pt;
 }
 "#;
@@ -41,6 +41,7 @@ struct Ui {
     btn_link: gtk::Button,
     btn_undo: gtk::Button,
     btn_redo: gtk::Button,
+    btn_search: gtk::Button,
     btn_open_menu: gtk::MenuButton,
     dlg_md: gtk::Dialog,
 }
@@ -73,6 +74,7 @@ impl MainWindow {
             btn_link: builder_get!(b("btn_link")),
             btn_undo: builder_get!(b("btn_undo")),
             btn_redo: builder_get!(b("btn_redo")),
+            btn_search: builder_get!(b("btn_search")),
             btn_open_menu: builder_get!(b("btn_open_menu")),
             dlg_md: builder_get!(b("dlg_md")),
         });
@@ -80,7 +82,7 @@ impl MainWindow {
 
         let css = gtk::CssProvider::new();
         css.load_from_data(CSS.as_ref());
-        ui.text_view.get_widget().get_style_context().add_provider(&css, u32::max_value());
+        ui.text_view.add_text_style_provider(&css, u32::max_value());
         let this = Self {
             settings: settings.clone(),
             data: data.clone(),
@@ -107,6 +109,7 @@ impl MainWindow {
         this.ui.btn_link.connect_clicked(connect!(t.edit_link()));
         this.ui.btn_undo.connect_clicked(connect!(t.undo()));
         this.ui.btn_redo.connect_clicked(connect!(t.redo()));
+        this.ui.btn_search.connect_clicked(connect!(t.open_search()));
 
         this.ui.window.set_application(Some(app));
         this.ui.window.add_controller(&this.get_window_key_press_handler());

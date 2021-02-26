@@ -47,6 +47,8 @@ impl Tag {
     pub const BLUE: &'static str = "blue"; // comment
     pub const YELLOW: &'static str = "yellow"; // highlight
 
+    pub const SEARCH: &'static str = "search"; // highlight for search results
+
     pub const RULE: &'static str = "rule";
     pub const MD_RULE: &'static str = "--- ---- ----- ------- ----- ---- ---";
 

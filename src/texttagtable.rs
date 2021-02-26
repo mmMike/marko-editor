@@ -101,6 +101,10 @@ impl TextTagTable {
         let yellow = gdk::RGBA { red: 1f32, green: 1f32, blue: 0f32, alpha: 0.6f32 };
         tag_yellow.set_property_background_rgba(Some(&yellow));
 
+        let tag_search = TextTagTable::create_tag(Tag::SEARCH, &table);
+        let highlight = gdk::RGBA { red: 1f32, green: 0f32, blue: 1f32, alpha: 0.4f32 };
+        tag_search.set_property_background_rgba(Some(&highlight));
+
         let _tag_rule = TextTagTable::create_tag(Tag::RULE, &table);
 
         Self { table }
