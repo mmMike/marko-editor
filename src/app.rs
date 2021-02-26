@@ -13,8 +13,11 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        let app = gtk::Application::new(Some(APP_ID), gtk::gio::ApplicationFlags::HANDLES_OPEN)
-            .expect("Initialization failed...");
+        let app = gtk::Application::new(
+            Some(APP_ID),
+            gtk::gio::ApplicationFlags::HANDLES_OPEN | gtk::gio::ApplicationFlags::NON_UNIQUE,
+        )
+        .expect("Initialization failed...");
 
         app.connect_activate(|app| {
             let w = App::create_window(app);
