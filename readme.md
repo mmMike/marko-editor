@@ -2,7 +2,7 @@
 
 Marko Editor is a simple WYSIWYG editor for note taking written in Rust and GTK 4. It uses Markdown as storage format and can read simple Markdown files. However, the main focus of Marko Editor is WYSIWYG note taking and not being a 100% compliant Markdown editor.
 
-![Marko Editor screenshot](./doc/marko-editor-screenshot.png?raw=true "Marko Editor")
+![Marko Editor in link edit mode screenshot](./doc/marko-editor-screenshot.png?raw=true "Marko Editor in link edit mode")
 
 ## Background
 
