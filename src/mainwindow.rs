@@ -43,6 +43,7 @@ struct Ui {
     btn_redo: gtk::Button,
     btn_search: gtk::Button,
     btn_open_menu: gtk::MenuButton,
+    outline_view: gtk::TreeView,
     dlg_md: gtk::Dialog,
 }
 
@@ -76,6 +77,7 @@ impl MainWindow {
             btn_redo: builder_get!(b("btn_redo")),
             btn_search: builder_get!(b("btn_search")),
             btn_open_menu: builder_get!(b("btn_open_menu")),
+            outline_view: builder_get!(b("outline_view")),
             dlg_md: builder_get!(b("dlg_md")),
         });
         ui.text_view_container.append(ui.text_view.get_widget());
@@ -110,6 +112,17 @@ impl MainWindow {
         this.ui.btn_undo.connect_clicked(connect!(t.undo()));
         this.ui.btn_redo.connect_clicked(connect!(t.redo()));
         this.ui.btn_search.connect_clicked(connect!(t.open_search()));
+
+        this.ui.outline_view.connect_row_activated({
+            let t = this.ui.text_view.clone();
+            move |s, path, _col| {
+                let model = s.get_model().unwrap();
+                if let Some(iter) = model.get_iter(path) {
+                    let line = model.get_value(&iter, 1).get::<i32>().unwrap().unwrap();
+                    t.scroll_to(line);
+                }
+            }
+        });
 
         this.ui.window.set_application(Some(app));
         this.ui.window.add_controller(&this.get_window_key_press_handler());
@@ -185,6 +198,7 @@ impl MainWindow {
                     if reader.read_to_string(&mut contents).is_ok() {
                         s.ui.text_view.new_content_markdown(&contents);
                         s.set_filename(&f);
+                        s.ui.outline_view.set_model(Some(&s.ui.text_view.get_outline_model()));
                     }
                 } else {
                     let dlg = gtk::MessageDialog::new(

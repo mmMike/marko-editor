@@ -6,7 +6,13 @@ Find out more: [Marko Editor](http://www.marko-editor.com)
 
 # Header 1 ``(Ctrl+1-6)``
 
+## Header 2
+
 ### Header 3
+
+#### Header 4
+
+##### Header 5
 
 ###### Header 6
 

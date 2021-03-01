@@ -21,6 +21,7 @@ use gtk::WidgetExt;
 
 use regex::Regex;
 
+use crate::gdk_glue::{ColorCreator, GetColor};
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -252,18 +253,16 @@ impl SearchBar {
                 buffer.select_range(&start, &end);
                 view.scroll_to_iter(&mut start, 0.05, false, 0., 0.);
                 return;
-            } else {
-                if wrap_around {
-                    if backward {
-                        cursor = buffer.get_end_iter();
-                    } else {
-                        cursor = buffer.get_start_iter();
-                    }
-                    wrap_around = false;
-                    continue;
+            } else if wrap_around {
+                if backward {
+                    cursor = buffer.get_end_iter();
                 } else {
-                    break;
+                    cursor = buffer.get_start_iter();
                 }
+                wrap_around = false;
+                continue;
+            } else {
+                break;
             }
         }
     }
@@ -326,6 +325,12 @@ pub struct TextView {
     is_editable: Rc<RefCell<bool>>,
     link_start: gtk::TextMark,
     link_end: gtk::TextMark,
+    outline_h1: gdk::RGBA,
+    outline_h2: gdk::RGBA,
+    outline_h3: gdk::RGBA,
+    outline_h4: gdk::RGBA,
+    outline_h5: gdk::RGBA,
+    outline_h6: gdk::RGBA,
 }
 
 impl TextView {
@@ -364,6 +369,14 @@ impl TextView {
         let link_start = buffer.create_mark(None, &buffer.get_start_iter(), true);
         let link_end = buffer.create_mark(None, &buffer.get_start_iter(), false);
 
+        let outline_h1: gdk::RGBA =
+            GetColor::get_color(&textview.get_style_context(), gtk::StateFlags::SELECTED);
+        let outline_h2: gdk::RGBA = outline_h1.brighter(115.);
+        let outline_h3: gdk::RGBA = outline_h1.brighter(130.);
+        let outline_h4: gdk::RGBA = outline_h1.brighter(145.);
+        let outline_h5: gdk::RGBA = outline_h1.brighter(160.);
+        let outline_h6: gdk::RGBA = outline_h1.brighter(175.);
+
         let this = Self {
             buffer,
             tags,
@@ -375,6 +388,12 @@ impl TextView {
             is_editable: Rc::new(RefCell::from(true)),
             link_start,
             link_end,
+            outline_h1,
+            outline_h2,
+            outline_h3,
+            outline_h4,
+            outline_h5,
+            outline_h6,
         };
         this.top_level.add_controller(&this.get_key_press_handler_background());
         this.textview.add_controller(&this.get_key_press_handler());
@@ -421,6 +440,12 @@ impl TextView {
 
     pub fn set_activate_link_cb<F: Fn(&str) + 'static>(&self, activate_link_cb: F) {
         *self.activate_link_cb.borrow_mut() = Box::new(activate_link_cb);
+    }
+
+    pub fn scroll_to(&self, line: i32) {
+        if let Some(mut iter) = self.textview.get_buffer().get_iter_at_line(line) {
+            self.textview.scroll_to_iter(&mut iter, 0.05, true, 0., 0.1);
+        }
     }
 
     fn set_editable(&self, editable: bool) {
@@ -637,7 +662,7 @@ impl TextView {
             for line in start.get_line()..end.get_line() + 1 {
                 if let Some(line_iter) = self.buffer.get_iter_at_line(line) {
                     for tag in line_iter.get_tags() {
-                        if tag.is_par_format() {
+                        if tag.get_par_format().is_some() {
                             let mut line_end = line_iter.clone();
                             line_end.forward_to_line_end();
                             line_end.forward_char();
@@ -786,5 +811,63 @@ impl TextView {
         self.buffer.assign_markdown(&markdown, true);
         self.buffer.end_irreversible_action();
         self.buffer.place_cursor(&self.buffer.get_start_iter());
+    }
+
+    pub fn get_outline_model(&self) -> gtk::ListStore {
+        let model = gtk::ListStore::new(&[
+            glib::GString::static_type(),
+            glib::Type::I32,
+            gdk::RGBA::static_type(),
+        ]);
+
+        let mut line_iter = self.buffer.get_start_iter();
+        let mut line = 0;
+        // let start = Instant::now();
+        model.set(&model.append(), &[0, 1, 2], &[&"=== START ===", &0, &gdk::RGBA::white()]);
+        loop {
+            for tag in &line_iter.get_toggled_tags(true) {
+                if let Some(par_format) = &tag.get_par_format() {
+                    if let Some(level) = Tag::header_level(par_format) {
+                        let mut line_end = line_iter.clone();
+                        line_end.forward_to_line_end();
+                        model.set(
+                            &model.append(),
+                            &[0, 1, 2],
+                            &[
+                                &format!(
+                                    "{}{}",
+                                    "  ".repeat((level - 1) as usize),
+                                    self.buffer.get_text(&line_iter, &line_end, false)
+                                ),
+                                &line,
+                                &match level {
+                                    1 => self.outline_h1,
+                                    2 => self.outline_h2,
+                                    3 => self.outline_h3,
+                                    4 => self.outline_h4,
+                                    5 => self.outline_h5,
+                                    6 => self.outline_h6,
+                                    _ => gdk::RGBA::white(),
+                                },
+                            ],
+                        );
+                    }
+                    break;
+                }
+            }
+            line += 1;
+            if !line_iter.forward_line() {
+                break;
+            }
+        }
+
+        let last_line = self.textview.get_buffer().get_line_count() - 1;
+        model.set(&model.append(), &[0, 1, 2], &[&"=== END ===", &last_line, &gdk::RGBA::white()]);
+
+        // let end = Instant::now();
+        // let dur = end.duration_since(start);
+        // println!("Elapsed: {}µs", dur.as_micros());
+
+        model
     }
 }

@@ -139,6 +139,7 @@ impl Settings {
                 }
             }
         }
+        res.sort();
         res
     }
 }

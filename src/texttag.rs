@@ -63,6 +63,18 @@ impl Tag {
             ParFormat::CODE => Tag::CODE,
         }
     }
+
+    pub fn header_level(par_format: &ParFormat) -> Option<i32> {
+        match par_format {
+            ParFormat::H1 => Some(1),
+            ParFormat::H2 => Some(2),
+            ParFormat::H3 => Some(3),
+            ParFormat::H4 => Some(4),
+            ParFormat::H5 => Some(5),
+            ParFormat::H6 => Some(6),
+            _ => None,
+        }
+    }
 }
 
 pub trait TextTagExt2 {
@@ -71,7 +83,7 @@ pub trait TextTagExt2 {
     fn get_image(&self) -> Option<String>;
     fn get_link(&self) -> Option<String>;
 
-    fn is_par_format(&self) -> bool;
+    fn get_par_format(&self) -> Option<ParFormat>;
 }
 
 impl TextTagExt2 for gtk::TextTag {
@@ -99,7 +111,7 @@ impl TextTagExt2 for gtk::TextTag {
         }
     }
 
-    fn is_par_format(&self) -> bool {
+    fn get_par_format(&self) -> Option<ParFormat> {
         match self.get_name().as_str() {
             Tag::H1 => Some(ParFormat::H1),
             Tag::H2 => Some(ParFormat::H2),
@@ -110,6 +122,5 @@ impl TextTagExt2 for gtk::TextTag {
             Tag::CODE => Some(ParFormat::CODE),
             _ => None,
         }
-        .is_some()
     }
 }

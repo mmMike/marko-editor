@@ -160,13 +160,50 @@
                 </child>
 
                 <child>
-                    <object class="GtkBox" id="text_view_container">
-                        <property name="orientation">vertical</property>
+
+                    <object class="GtkPaned">
+                        <child>
+                            <object class="GtkScrolledWindow">
+                                <property name="hexpand">false</property>
+                                <property name="vexpand">true</property>
+                                <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
+                                <child>
+                                    <object class="GtkTreeView" id="outline_view">
+                                        <property name="activate-on-single-click">true</property>
+                                        <property name="headers-visible">false</property>
+                                        <child>
+                                            <object class="GtkTreeViewColumn" id="outline_section_col">
+                                                <property name="title">Section</property>
+                                                <child>
+                                                    <object class="GtkCellRendererText" id="outline_section_col_rend">
+                                                        <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
+                                                        <property name="weight">700</property>
+                                                        <property name="size-points">12</property>
+                                                    </object>
+                                                    <attributes>
+                                                        <attribute name="text">0</attribute>
+                                                        <attribute name="background-rgba">2</attribute>
+                                                    </attributes>
+                                                </child>
+                                            </object>
+                                        </child>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                        <child>
+                            <object class="GtkBox" id="text_view_container">
+                                <property name="orientation">vertical</property>
+                            </object>
+                        </child>
+
                     </object>
+
                 </child>
             </object>
         </child>
     </object>
+
     <menu id="open_model">
         <section>
             <attribute name="display-hint">circular-buttons</attribute>
