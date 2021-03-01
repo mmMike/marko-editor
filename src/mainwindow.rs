@@ -44,6 +44,7 @@ struct Ui {
     btn_search: gtk::Button,
     btn_open_menu: gtk::MenuButton,
     outline_view: gtk::TreeView,
+    outline_splitter: gtk::Paned,
     dlg_md: gtk::Dialog,
 }
 
@@ -78,6 +79,7 @@ impl MainWindow {
             btn_search: builder_get!(b("btn_search")),
             btn_open_menu: builder_get!(b("btn_open_menu")),
             outline_view: builder_get!(b("outline_view")),
+            outline_splitter: builder_get!(b("outline_splitter")),
             dlg_md: builder_get!(b("dlg_md")),
         });
         ui.text_view_container.append(ui.text_view.get_widget());
@@ -412,10 +414,22 @@ impl MainWindow {
 
     fn store_geometry(&self) {
         self.settings.store_geometry(&self.ui.window, "geometry");
+        self.settings.store_geometry_property(
+            &self.ui.window,
+            "outline_splitter",
+            self.ui.outline_splitter.get_position().to_string().as_str(),
+        );
     }
 
     fn restore_geometry(&self) {
         self.settings.restore_geometry(&self.ui.window, "geometry");
+        if let Some(string) =
+            self.settings.read_geometry_property(&self.ui.window, "outline_splitter")
+        {
+            if let Ok(pos) = string.parse::<i32>() {
+                self.ui.outline_splitter.set_position(pos);
+            }
+        }
     }
 
     fn close(&self) {

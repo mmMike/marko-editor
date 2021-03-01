@@ -161,7 +161,8 @@
 
                 <child>
 
-                    <object class="GtkPaned">
+                    <object class="GtkPaned" id="outline_splitter">
+                        <property name="position">150</property>
                         <child>
                             <object class="GtkScrolledWindow">
                                 <property name="hexpand">false</property>

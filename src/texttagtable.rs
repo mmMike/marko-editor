@@ -45,26 +45,38 @@ impl TextTagTable {
         let tag_h1 = TextTagTable::create_tag(Tag::H1, &table);
         tag_h1.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
         tag_h1.set_property_size_points(24f64);
+        tag_h1.set_property_pixels_above_lines(8);
+        tag_h1.set_property_pixels_below_lines(4);
 
         let tag_h2 = TextTagTable::create_tag(Tag::H2, &table);
         tag_h2.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
         tag_h2.set_property_size_points(22f64);
+        tag_h2.set_property_pixels_above_lines(7);
+        tag_h2.set_property_pixels_below_lines(4);
 
         let tag_h3 = TextTagTable::create_tag(Tag::H3, &table);
         tag_h3.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
         tag_h3.set_property_size_points(20f64);
+        tag_h3.set_property_pixels_above_lines(6);
+        tag_h3.set_property_pixels_below_lines(4);
 
         let tag_h4 = TextTagTable::create_tag(Tag::H4, &table);
         tag_h4.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
         tag_h4.set_property_size_points(18f64);
+        tag_h4.set_property_pixels_above_lines(5);
+        tag_h4.set_property_pixels_below_lines(4);
 
         let tag_h5 = TextTagTable::create_tag(Tag::H5, &table);
         tag_h5.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
         tag_h5.set_property_size_points(16f64);
+        tag_h5.set_property_pixels_above_lines(4);
+        tag_h5.set_property_pixels_below_lines(4);
 
         let tag_h6 = TextTagTable::create_tag(Tag::H6, &table);
         tag_h6.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
         tag_h6.set_property_size_points(14f64);
+        tag_h6.set_property_pixels_above_lines(4);
+        tag_h6.set_property_pixels_below_lines(4);
 
         let tag_bold = TextTagTable::create_tag(Tag::BOLD, &table);
         tag_bold.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
@@ -74,12 +86,11 @@ impl TextTagTable {
 
         let tag_mono = TextTagTable::create_tag(Tag::MONO, &table);
         tag_mono.set_property_family(Some("Monospace"));
-        let grey = gdk::RGBA { red: 0f32, green: 0f32, blue: 0f32, alpha: 0.2f32 };
+        let grey = gdk::RGBA { red: 0f32, green: 0f32, blue: 0.3f32, alpha: 0.05f32 };
         tag_mono.set_property_background_rgba(Some(&grey));
 
         let tag_code = TextTagTable::create_tag(Tag::CODE, &table);
         tag_code.set_property_family(Some("Monospace"));
-        let grey = gdk::RGBA { red: 0f32, green: 0f32, blue: 0f32, alpha: 0.2f32 };
         tag_code.set_property_paragraph_background_rgba(Some(&grey));
 
         let tag_strike = TextTagTable::create_tag(Tag::STRIKE, &table);

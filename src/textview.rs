@@ -823,7 +823,7 @@ impl TextView {
         let mut line_iter = self.buffer.get_start_iter();
         let mut line = 0;
         // let start = Instant::now();
-        model.set(&model.append(), &[0, 1, 2], &[&"=== START ===", &0, &gdk::RGBA::white()]);
+        model.set(&model.append(), &[0, 1, 2], &[&"▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲", &0, &gdk::RGBA::white()]);
         loop {
             for tag in &line_iter.get_toggled_tags(true) {
                 if let Some(par_format) = &tag.get_par_format() {
@@ -862,7 +862,11 @@ impl TextView {
         }
 
         let last_line = self.textview.get_buffer().get_line_count() - 1;
-        model.set(&model.append(), &[0, 1, 2], &[&"=== END ===", &last_line, &gdk::RGBA::white()]);
+        model.set(
+            &model.append(),
+            &[0, 1, 2],
+            &[&"▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼", &last_line, &gdk::RGBA::white()],
+        );
 
         // let end = Instant::now();
         // let dur = end.duration_since(start);

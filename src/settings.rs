@@ -60,25 +60,44 @@ impl Settings {
         Ok(config.write(self.settings_file.as_path().to_str().unwrap())?)
     }
 
+    pub fn store_geometry_property<W: IsA<gtk::Window> + IsA<gtk::Native>>(
+        &self,
+        window: &W,
+        key: &str,
+        value: &str,
+    ) {
+        if let Some(screen) = window.get_window_screen() {
+            self.set(key, screen.serialize().as_str(), value);
+            self.write().unwrap();
+        }
+    }
+
+    pub fn read_geometry_property<W: IsA<gtk::Window> + IsA<gtk::Native>>(
+        &self,
+        window: &W,
+        key: &str,
+    ) -> Option<String> {
+        if let Some(screen) = window.get_window_screen() {
+            return self.get(key, screen.serialize().as_str());
+        } else {
+            None
+        }
+    }
+
     pub fn store_geometry<W: IsA<gtk::Window> + IsA<gtk::Native>>(&self, window: &W, key: &str) {
         if let Some(rect) = window.get_window_geometry() {
-            if let Some(screen) = window.get_window_screen() {
-                self.set(key, screen.serialize().as_str(), rect.serialize().as_str());
-                self.write().unwrap();
-            }
+            self.store_geometry_property(window, key, rect.serialize().as_str());
         }
     }
 
     pub fn restore_geometry<W: IsA<gtk::Window> + IsA<gtk::Native>>(&self, window: &W, key: &str) {
-        if let Some(screen) = window.get_window_screen() {
-            match self.get(key, screen.serialize().as_str()) {
-                None => {}
-                Some(data) => {
-                    if let Some(rect) = gdk::Rectangle::deserialize(&*data) {
-                        if let Some(current) = window.get_window_geometry() {
-                            if current != rect {
-                                window.set_window_geometry(&rect);
-                            }
+        match self.read_geometry_property(window, key) {
+            None => {}
+            Some(data) => {
+                if let Some(rect) = gdk::Rectangle::deserialize(&*data) {
+                    if let Some(current) = window.get_window_geometry() {
+                        if current != rect {
+                            window.set_window_geometry(&rect);
                         }
                     }
                 }
