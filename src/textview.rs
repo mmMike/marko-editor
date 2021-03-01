@@ -313,6 +313,43 @@ impl SearchBar {
     }
 }
 
+pub struct Colors {
+    outline_none: gdk::RGBA,
+    outline_h1: gdk::RGBA,
+    outline_h2: gdk::RGBA,
+    outline_h3: gdk::RGBA,
+    outline_h4: gdk::RGBA,
+    outline_h5: gdk::RGBA,
+    outline_h6: gdk::RGBA,
+}
+
+impl Colors {
+    pub fn new() -> Self {
+        Self {
+            outline_none: gdk::RGBA::black(),
+            outline_h1: gdk::RGBA::black(),
+            outline_h2: gdk::RGBA::black(),
+            outline_h3: gdk::RGBA::black(),
+            outline_h4: gdk::RGBA::black(),
+            outline_h5: gdk::RGBA::black(),
+            outline_h6: gdk::RGBA::black(),
+        }
+    }
+
+    pub fn update(&mut self, style_context: &gtk::StyleContext, prefer_dark: bool) {
+        self.outline_none = GetColor::get_color(style_context, true, gtk::StateFlags::LINK);
+        self.outline_h1 = GetColor::get_color(style_context, true, gtk::StateFlags::SELECTED);
+
+        let factor = if prefer_dark { -15. } else { 15. };
+
+        self.outline_h2 = self.outline_h1.brighter(100. + 1. * factor);
+        self.outline_h3 = self.outline_h1.brighter(100. + 2. * factor);
+        self.outline_h4 = self.outline_h1.brighter(100. + 3. * factor);
+        self.outline_h5 = self.outline_h1.brighter(100. + 4. * factor);
+        self.outline_h6 = self.outline_h1.brighter(100. + 5. * factor);
+    }
+}
+
 #[derive(Clone)]
 pub struct TextView {
     buffer: gtk::TextBuffer,
@@ -325,12 +362,7 @@ pub struct TextView {
     is_editable: Rc<RefCell<bool>>,
     link_start: gtk::TextMark,
     link_end: gtk::TextMark,
-    outline_h1: gdk::RGBA,
-    outline_h2: gdk::RGBA,
-    outline_h3: gdk::RGBA,
-    outline_h4: gdk::RGBA,
-    outline_h5: gdk::RGBA,
-    outline_h6: gdk::RGBA,
+    colors: Rc<RefCell<Colors>>,
 }
 
 impl TextView {
@@ -369,14 +401,6 @@ impl TextView {
         let link_start = buffer.create_mark(None, &buffer.get_start_iter(), true);
         let link_end = buffer.create_mark(None, &buffer.get_start_iter(), false);
 
-        let outline_h1: gdk::RGBA =
-            GetColor::get_color(&textview.get_style_context(), gtk::StateFlags::SELECTED);
-        let outline_h2: gdk::RGBA = outline_h1.brighter(115.);
-        let outline_h3: gdk::RGBA = outline_h1.brighter(130.);
-        let outline_h4: gdk::RGBA = outline_h1.brighter(145.);
-        let outline_h5: gdk::RGBA = outline_h1.brighter(160.);
-        let outline_h6: gdk::RGBA = outline_h1.brighter(175.);
-
         let this = Self {
             buffer,
             tags,
@@ -388,12 +412,7 @@ impl TextView {
             is_editable: Rc::new(RefCell::from(true)),
             link_start,
             link_end,
-            outline_h1,
-            outline_h2,
-            outline_h3,
-            outline_h4,
-            outline_h5,
-            outline_h6,
+            colors: Rc::new(RefCell::new(Colors::new())),
         };
         this.top_level.add_controller(&this.get_key_press_handler_background());
         this.textview.add_controller(&this.get_key_press_handler());
@@ -414,6 +433,8 @@ impl TextView {
         this.buffer
             .connect_local("insert-text", true, connect_fwd1!(this.buffer_do_insert_text()))
             .unwrap();
+
+        this.update_colors(false);
 
         this
     }
@@ -814,6 +835,8 @@ impl TextView {
     }
 
     pub fn get_outline_model(&self) -> gtk::ListStore {
+        let colors = self.colors.borrow();
+
         let model = gtk::ListStore::new(&[
             glib::GString::static_type(),
             glib::Type::I32,
@@ -823,7 +846,7 @@ impl TextView {
         let mut line_iter = self.buffer.get_start_iter();
         let mut line = 0;
         // let start = Instant::now();
-        model.set(&model.append(), &[0, 1, 2], &[&"▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲", &0, &gdk::RGBA::white()]);
+        model.set(&model.append(), &[0, 1, 2], &[&"▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲", &0, &colors.outline_none]);
         loop {
             for tag in &line_iter.get_toggled_tags(true) {
                 if let Some(par_format) = &tag.get_par_format() {
@@ -841,13 +864,13 @@ impl TextView {
                                 ),
                                 &line,
                                 &match level {
-                                    1 => self.outline_h1,
-                                    2 => self.outline_h2,
-                                    3 => self.outline_h3,
-                                    4 => self.outline_h4,
-                                    5 => self.outline_h5,
-                                    6 => self.outline_h6,
-                                    _ => gdk::RGBA::white(),
+                                    1 => colors.outline_h1,
+                                    2 => colors.outline_h2,
+                                    3 => colors.outline_h3,
+                                    4 => colors.outline_h4,
+                                    5 => colors.outline_h5,
+                                    6 => colors.outline_h6,
+                                    _ => colors.outline_none,
                                 },
                             ],
                         );
@@ -865,7 +888,7 @@ impl TextView {
         model.set(
             &model.append(),
             &[0, 1, 2],
-            &[&"▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼", &last_line, &gdk::RGBA::white()],
+            &[&"▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼", &last_line, &colors.outline_none],
         );
 
         // let end = Instant::now();
@@ -873,5 +896,9 @@ impl TextView {
         // println!("Elapsed: {}µs", dur.as_micros());
 
         model
+    }
+
+    pub fn update_colors(&self, prefer_dark: bool) {
+        self.colors.borrow_mut().update(&self.textview.get_style_context(), prefer_dark);
     }
 }

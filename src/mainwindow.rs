@@ -43,6 +43,7 @@ struct Ui {
     btn_redo: gtk::Button,
     btn_search: gtk::Button,
     btn_open_menu: gtk::MenuButton,
+    outline_widget: gtk::ScrolledWindow,
     outline_view: gtk::TreeView,
     outline_splitter: gtk::Paned,
     dlg_md: gtk::Dialog,
@@ -78,6 +79,7 @@ impl MainWindow {
             btn_redo: builder_get!(b("btn_redo")),
             btn_search: builder_get!(b("btn_search")),
             btn_open_menu: builder_get!(b("btn_open_menu")),
+            outline_widget: builder_get!(b("outline_widget")),
             outline_view: builder_get!(b("outline_view")),
             outline_splitter: builder_get!(b("outline_splitter")),
             dlg_md: builder_get!(b("dlg_md")),
@@ -401,8 +403,10 @@ impl MainWindow {
                             return glib::signal::Inhibit(true);
                         }
                         gdk::keys::constants::e => println!("{}", this.ui.text_view.to_markdown()),
-                        gdk::keys::constants::s => this.btn_save_clicked(),
                         gdk::keys::constants::m => this.act_markdown_dlg(),
+                        gdk::keys::constants::o => this.toggle_outline(),
+                        gdk::keys::constants::p => this.toggle_dark_theme(),
+                        gdk::keys::constants::s => this.btn_save_clicked(),
                         _ => {}
                     }
                 }
@@ -419,10 +423,22 @@ impl MainWindow {
             "outline_splitter",
             self.ui.outline_splitter.get_position().to_string().as_str(),
         );
+        self.settings.store_geometry_property(
+            &self.ui.window,
+            "outline_visible",
+            self.ui.outline_widget.get_visible().to_string().as_str(),
+        );
     }
 
     fn restore_geometry(&self) {
         self.settings.restore_geometry(&self.ui.window, "geometry");
+        if let Some(string) =
+            self.settings.read_geometry_property(&self.ui.window, "outline_visible")
+        {
+            if let Ok(visible) = string.parse::<bool>() {
+                self.ui.outline_widget.set_visible(visible);
+            }
+        }
         if let Some(string) =
             self.settings.read_geometry_property(&self.ui.window, "outline_splitter")
         {
@@ -558,6 +574,22 @@ impl MainWindow {
                 bookmarks.append(Some(item.as_str()), Some(format!("win.{}", i).as_str()));
             }
             menu.append_section(None, &bookmarks);
+        }
+    }
+
+    fn toggle_outline(&self) {
+        self.ui.outline_view.set_model(Some(&self.ui.text_view.get_outline_model()));
+        self.ui.outline_widget.set_visible(!self.ui.outline_widget.get_visible());
+    }
+
+    fn toggle_dark_theme(&self) {
+        if let Some(settings) = gtk::Settings::get_default() {
+            settings.set_property_gtk_theme_name(Some("Adwaita"));
+
+            let current = settings.get_property_gtk_application_prefer_dark_theme();
+            settings.set_property_gtk_application_prefer_dark_theme(!current);
+            self.ui.text_view.update_colors(!current);
+            self.ui.outline_view.set_model(Some(&self.ui.text_view.get_outline_model()));
         }
     }
 }

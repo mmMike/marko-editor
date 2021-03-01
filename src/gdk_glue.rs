@@ -31,22 +31,31 @@ impl Serialize<gdk::Rectangle> for gdk::Rectangle {
 }
 
 pub trait GetColor {
-    fn get_color(&self, flags: gtk::StateFlags) -> gdk::RGBA;
+    fn get_color(&self, is_background: bool, flags: gtk::StateFlags) -> gdk::RGBA;
 }
 
 impl GetColor for gtk::StyleContext {
-    fn get_color(&self, flags: gtk::StateFlags) -> gdk::RGBA {
+    fn get_color(&self, is_background: bool, flags: gtk::StateFlags) -> gdk::RGBA {
         let ctx = self.clone();
         ctx.set_state(flags);
-        let mut s = gtk::cairo::ImageSurface::create(gtk::cairo::Format::ARgb32, 1, 1).unwrap();
+        let mut s = gtk::cairo::ImageSurface::create(gtk::cairo::Format::ARgb32, 2, 2).unwrap();
         let c = gtk::cairo::Context::new(&s);
-        gtk::render_background(&ctx, &c, 0f64, 0f64, 1f64, 1f64);
+        if is_background {
+            gtk::render_background(&ctx, &c, 0f64, 0f64, 1f64, 1f64);
+        } else {
+            gtk::render_line(&ctx, &c, 0f64, 0f64, 1f64, 1f64);
+        }
         drop(c);
         let data = s.get_data().unwrap();
         let slice = &data[0..4];
 
-        let transform =
-            |input: f32| -> f32 { (input / (slice[3] as f32) * 255f32).floor() / 255f32 };
+        let transform = |input: f32| -> f32 {
+            if slice[3] == 0 {
+                0.
+            } else {
+                (input / (slice[3] as f32) * 255f32).floor() / 255f32
+            }
+        };
 
         gdk::RGBA {
             red: transform(slice[2] as f32),

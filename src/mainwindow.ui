@@ -160,11 +160,10 @@
                 </child>
 
                 <child>
-
                     <object class="GtkPaned" id="outline_splitter">
                         <property name="position">150</property>
                         <child>
-                            <object class="GtkScrolledWindow">
+                            <object class="GtkScrolledWindow" id="outline_widget">
                                 <property name="hexpand">false</property>
                                 <property name="vexpand">true</property>
                                 <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
@@ -199,7 +198,6 @@
                         </child>
 
                     </object>
-
                 </child>
             </object>
         </child>
