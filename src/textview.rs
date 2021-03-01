@@ -443,10 +443,6 @@ impl TextView {
         &self.top_level
     }
 
-    pub fn add_text_style_provider<P: IsA<gtk::StyleProvider>>(&self, provider: &P, priority: u32) {
-        self.textview.get_style_context().add_provider(provider, priority);
-    }
-
     pub fn get_modified(&self) -> bool {
         self.buffer.get_modified()
     }
@@ -464,6 +460,13 @@ impl TextView {
     }
 
     pub fn scroll_to(&self, line: i32) {
+        if let Some(mut iter) = self.textview.get_buffer().get_iter_at_line(line) {
+            self.textview.scroll_to_iter(&mut iter, 0.05, true, 0., 0.1);
+        }
+    }
+
+    pub fn scroll_to_top_bottom(&self, to_top: bool) {
+        let line = if to_top { 0 } else { self.textview.get_buffer().get_line_count() - 1 };
         if let Some(mut iter) = self.textview.get_buffer().get_iter_at_line(line) {
             self.textview.scroll_to_iter(&mut iter, 0.05, true, 0., 0.1);
         }
@@ -834,7 +837,7 @@ impl TextView {
         self.buffer.place_cursor(&self.buffer.get_start_iter());
     }
 
-    pub fn get_outline_model(&self) -> gtk::ListStore {
+    pub fn get_outline_model(&self, max_level: u32) -> gtk::ListStore {
         let colors = self.colors.borrow();
 
         let model = gtk::ListStore::new(&[
@@ -846,34 +849,35 @@ impl TextView {
         let mut line_iter = self.buffer.get_start_iter();
         let mut line = 0;
         // let start = Instant::now();
-        model.set(&model.append(), &[0, 1, 2], &[&"▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲", &0, &colors.outline_none]);
         loop {
             for tag in &line_iter.get_toggled_tags(true) {
                 if let Some(par_format) = &tag.get_par_format() {
                     if let Some(level) = Tag::header_level(par_format) {
-                        let mut line_end = line_iter.clone();
-                        line_end.forward_to_line_end();
-                        model.set(
-                            &model.append(),
-                            &[0, 1, 2],
-                            &[
-                                &format!(
-                                    "{}{}",
-                                    "  ".repeat((level - 1) as usize),
-                                    self.buffer.get_text(&line_iter, &line_end, false)
-                                ),
-                                &line,
-                                &match level {
-                                    1 => colors.outline_h1,
-                                    2 => colors.outline_h2,
-                                    3 => colors.outline_h3,
-                                    4 => colors.outline_h4,
-                                    5 => colors.outline_h5,
-                                    6 => colors.outline_h6,
-                                    _ => colors.outline_none,
-                                },
-                            ],
-                        );
+                        if level <= max_level {
+                            let mut line_end = line_iter.clone();
+                            line_end.forward_to_line_end();
+                            model.set(
+                                &model.append(),
+                                &[0, 1, 2],
+                                &[
+                                    &format!(
+                                        "{}{}",
+                                        "  ".repeat((level - 1) as usize),
+                                        self.buffer.get_text(&line_iter, &line_end, false)
+                                    ),
+                                    &line,
+                                    &match level {
+                                        1 => colors.outline_h1,
+                                        2 => colors.outline_h2,
+                                        3 => colors.outline_h3,
+                                        4 => colors.outline_h4,
+                                        5 => colors.outline_h5,
+                                        6 => colors.outline_h6,
+                                        _ => colors.outline_none,
+                                    },
+                                ],
+                            );
+                        }
                     }
                     break;
                 }
@@ -883,13 +887,6 @@ impl TextView {
                 break;
             }
         }
-
-        let last_line = self.textview.get_buffer().get_line_count() - 1;
-        model.set(
-            &model.append(),
-            &[0, 1, 2],
-            &[&"▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼", &last_line, &colors.outline_none],
-        );
 
         // let end = Instant::now();
         // let dur = end.duration_since(start);

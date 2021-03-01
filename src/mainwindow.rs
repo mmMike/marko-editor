@@ -43,9 +43,12 @@ struct Ui {
     btn_redo: gtk::Button,
     btn_search: gtk::Button,
     btn_open_menu: gtk::MenuButton,
-    outline_widget: gtk::ScrolledWindow,
+    outline_widget: gtk::Box,
     outline_view: gtk::TreeView,
     outline_splitter: gtk::Paned,
+    outline_maxlevel: gtk::ComboBox,
+    btn_outline_top: gtk::Button,
+    btn_outline_bottom: gtk::Button,
     dlg_md: gtk::Dialog,
 }
 
@@ -82,13 +85,15 @@ impl MainWindow {
             outline_widget: builder_get!(b("outline_widget")),
             outline_view: builder_get!(b("outline_view")),
             outline_splitter: builder_get!(b("outline_splitter")),
+            outline_maxlevel: builder_get!(b("outline_maxlevel")),
+            btn_outline_top: builder_get!(b("btn_outline_top")),
+            btn_outline_bottom: builder_get!(b("btn_outline_bottom")),
             dlg_md: builder_get!(b("dlg_md")),
         });
         ui.text_view_container.append(ui.text_view.get_widget());
 
         let css = gtk::CssProvider::new();
-        css.load_from_data(CSS.as_ref());
-        ui.text_view.add_text_style_provider(&css, u32::max_value());
+
         let this = Self {
             settings: settings.clone(),
             data: data.clone(),
@@ -116,7 +121,10 @@ impl MainWindow {
         this.ui.btn_undo.connect_clicked(connect!(t.undo()));
         this.ui.btn_redo.connect_clicked(connect!(t.redo()));
         this.ui.btn_search.connect_clicked(connect!(t.open_search()));
+        this.ui.btn_outline_top.connect_clicked(connect!(t.scroll_to_top_bottom(true)));
+        this.ui.btn_outline_bottom.connect_clicked(connect!(t.scroll_to_top_bottom(false)));
 
+        this.ui.outline_maxlevel.connect_changed(connect!(this.update_outline()));
         this.ui.outline_view.connect_row_activated({
             let t = this.ui.text_view.clone();
             move |s, path, _col| {
@@ -169,6 +177,39 @@ impl MainWindow {
     pub fn prepare_show(&self) {
         self.ui.window.realize();
         self.restore_geometry();
+
+        let css = gtk::CssProvider::new();
+        css.load_from_data(CSS.as_ref());
+
+        fn apply_css<P: IsA<gtk::StyleProvider>, W: IsA<gtk::Widget>>(
+            widget: &W,
+            provider: &P,
+            priority: u32,
+        ) {
+            widget.get_style_context().add_provider(provider, priority);
+
+            let mut child = widget.get_first_child();
+            while let Some(c) = &child {
+                apply_css(c, provider, priority);
+                child = c.get_next_sibling();
+            }
+        }
+        apply_css(&self.ui.window, &css, u32::max_value());
+
+        // the combobox should look like a button, since it contains one we style it like the others
+        fn css_combo_to_flat<W: IsA<gtk::Widget>>(widget: &W) {
+            if widget.get_css_classes().contains(&glib::GString::from("combo")) {
+                widget.remove_css_class("combo");
+                widget.add_css_class("flat");
+            }
+
+            let mut child = widget.get_first_child();
+            while let Some(c) = &child {
+                css_combo_to_flat(c);
+                child = c.get_next_sibling();
+            }
+        };
+        css_combo_to_flat(&self.ui.outline_widget);
     }
 
     pub fn show(&self) {
@@ -202,7 +243,7 @@ impl MainWindow {
                     if reader.read_to_string(&mut contents).is_ok() {
                         s.ui.text_view.new_content_markdown(&contents);
                         s.set_filename(&f);
-                        s.ui.outline_view.set_model(Some(&s.ui.text_view.get_outline_model()));
+                        s.update_outline();
                     }
                 } else {
                     let dlg = gtk::MessageDialog::new(
@@ -428,6 +469,8 @@ impl MainWindow {
             "outline_visible",
             self.ui.outline_widget.get_visible().to_string().as_str(),
         );
+        let level = self.ui.outline_maxlevel.get_active().unwrap().to_string();
+        let _ = self.settings.store("config", "outline_maxlevel", level.as_str());
     }
 
     fn restore_geometry(&self) {
@@ -444,6 +487,11 @@ impl MainWindow {
         {
             if let Ok(pos) = string.parse::<i32>() {
                 self.ui.outline_splitter.set_position(pos);
+            }
+        }
+        if let Some(string) = self.settings.get("config", "outline_maxlevel") {
+            if let Ok(level) = string.parse::<u32>() {
+                self.ui.outline_maxlevel.set_active(Some(level));
             }
         }
     }
@@ -578,8 +626,13 @@ impl MainWindow {
     }
 
     fn toggle_outline(&self) {
-        self.ui.outline_view.set_model(Some(&self.ui.text_view.get_outline_model()));
+        self.update_outline();
         self.ui.outline_widget.set_visible(!self.ui.outline_widget.get_visible());
+    }
+
+    fn update_outline(&self) {
+        let level = self.ui.outline_maxlevel.get_active().unwrap() + 1;
+        self.ui.outline_view.set_model(Some(&self.ui.text_view.get_outline_model(level)));
     }
 
     fn toggle_dark_theme(&self) {
@@ -589,7 +642,7 @@ impl MainWindow {
             let current = settings.get_property_gtk_application_prefer_dark_theme();
             settings.set_property_gtk_application_prefer_dark_theme(!current);
             self.ui.text_view.update_colors(!current);
-            self.ui.outline_view.set_model(Some(&self.ui.text_view.get_outline_model()));
+            self.update_outline();
         }
     }
 }

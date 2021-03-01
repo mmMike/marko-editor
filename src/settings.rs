@@ -52,6 +52,11 @@ impl Settings {
         self.config.borrow_mut().set(section, key, Some(value.parse().unwrap()));
     }
 
+    pub fn store(&self, section: &str, key: &str, value: &str) -> Result<()> {
+        self.set(section, key, value);
+        self.write()
+    }
+
     pub fn write(&self) -> Result<()> {
         self.write_internal(&self.config.borrow())
     }

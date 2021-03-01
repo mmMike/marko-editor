@@ -64,7 +64,7 @@ impl Tag {
         }
     }
 
-    pub fn header_level(par_format: &ParFormat) -> Option<i32> {
+    pub fn header_level(par_format: &ParFormat) -> Option<u32> {
         match par_format {
             ParFormat::H1 => Some(1),
             ParFormat::H2 => Some(2),

@@ -42,6 +42,8 @@ While the source code is not perfect, parts of it might serve as examples for GT
 
 * Bookmarks to important note documents
 
+* Optional outline for large documents
+
 --- ---- ----- ------- ----- ---- ---
 
 ## Development Status
@@ -61,8 +63,6 @@ If you want to use it anyway, these are some of the issues to look out for:
 ### Planned Features
 
 **Additional to the known shortcomings, in no particular order and time frame.**
-
-* Document outline
 
 * Image embedding (not only image reference editing like currently)
 

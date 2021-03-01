@@ -163,27 +163,90 @@
                     <object class="GtkPaned" id="outline_splitter">
                         <property name="position">150</property>
                         <child>
-                            <object class="GtkScrolledWindow" id="outline_widget">
-                                <property name="hexpand">false</property>
-                                <property name="vexpand">true</property>
-                                <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
+                            <object class="GtkBox" id="outline_widget">
+                                <property name="orientation">vertical</property>
                                 <child>
-                                    <object class="GtkTreeView" id="outline_view">
-                                        <property name="activate-on-single-click">true</property>
-                                        <property name="headers-visible">false</property>
+                                    <object class="GtkSeparator"></object>
+                                </child>
+                                <child>
+                                    <object class="GtkBox">
+                                        <property name="orientation">vertical</property>
                                         <child>
-                                            <object class="GtkTreeViewColumn" id="outline_section_col">
-                                                <property name="title">Section</property>
-                                                <child>
-                                                    <object class="GtkCellRendererText" id="outline_section_col_rend">
-                                                        <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
-                                                        <property name="weight">700</property>
-                                                        <property name="size-points">12</property>
+                                            <object class="GtkCenterBox">
+                                                <child type="start">
+                                                    <object class="GtkBox">
+<!--                                                        <child>-->
+<!--                                                            <object class="GtkLabel">-->
+<!--                                                                <property name="label" translatable="yes">Max level:</property>-->
+<!--                                                                <property name="use-markup">true</property>-->
+<!--                                                            </object>-->
+<!--                                                        </child>-->
+                                                        <child>
+                                                            <object class="GtkComboBox" id="outline_maxlevel">
+                                                                <property name="model">outline_maxl</property>
+                                                                <property name="active">3</property>
+                                                                <property name="hexpand">1</property>
+                                                                <property name="can-focus">false</property>
+                                                                <property name="has-frame">false</property>
+                                                                <child>
+                                                                    <object class="GtkCellRendererText"/>
+                                                                    <attributes>
+                                                                        <attribute name="text">0</attribute>
+                                                                    </attributes>
+                                                                </child>
+                                                            </object>
+                                                        </child>
                                                     </object>
-                                                    <attributes>
-                                                        <attribute name="text">0</attribute>
-                                                        <attribute name="background-rgba">2</attribute>
-                                                    </attributes>
+                                                </child>
+
+                                                <child type="end">
+                                                    <object class="GtkBox">
+                                                        <child>
+                                                            <object class="GtkButton" id="btn_outline_top">
+                                                                <property name="icon-name">go-top-symbolic</property>
+                                                                <property name="tooltip-text" translatable="yes">Scroll to top</property>
+                                                                <property name="can-focus">false</property>
+                                                                <property name="has-frame">false</property>
+                                                            </object>
+                                                        </child>
+                                                        <child>
+                                                            <object class="GtkButton" id="btn_outline_bottom">
+                                                                <property name="icon-name">go-bottom-symbolic</property>
+                                                                <property name="tooltip-text" translatable="yes">Scroll to bottom</property>
+                                                                <property name="can-focus">false</property>
+                                                                <property name="has-frame">false</property>
+                                                            </object>
+                                                        </child>
+                                                    </object>
+                                                </child>
+                                            </object>
+                                        </child>
+                                        <child>
+                                            <object class="GtkScrolledWindow">
+                                                <property name="vexpand">true</property>
+                                                <property name="hscrollbar-policy">GTK_POLICY_NEVER</property>
+                                                <child>
+                                                    <object class="GtkTreeView" id="outline_view">
+                                                        <property name="activate-on-single-click">true</property>
+                                                        <property name="headers-visible">false</property>
+                                                        <child>
+                                                            <object class="GtkTreeViewColumn" id="outline_section_col">
+                                                                <property name="title">Section</property>
+                                                                <child>
+                                                                    <object class="GtkCellRendererText"
+                                                                            id="outline_section_col_rend">
+                                                                        <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
+                                                                        <property name="weight">700</property>
+                                                                        <property name="size-points">12</property>
+                                                                    </object>
+                                                                    <attributes>
+                                                                        <attribute name="text">0</attribute>
+                                                                        <attribute name="background-rgba">2</attribute>
+                                                                    </attributes>
+                                                                </child>
+                                                            </object>
+                                                        </child>
+                                                    </object>
                                                 </child>
                                             </object>
                                         </child>
@@ -385,4 +448,30 @@
             </item>
         </section>
     </menu>
+
+    <object class="GtkListStore" id="outline_maxl">
+        <columns>
+            <column type="gchararray"/>
+        </columns>
+        <data>
+            <row>
+                <col id="0">Level 1</col>
+            </row>
+            <row>
+                <col id="0">Level 1-2</col>
+            </row>
+            <row>
+                <col id="0">Level 1-3</col>
+            </row>
+            <row>
+                <col id="0">Level 1-4</col>
+            </row>
+            <row>
+                <col id="0">Level 1-5</col>
+            </row>
+            <row>
+                <col id="0">All levels</col>
+            </row>
+        </data>
+    </object>
 </interface>
