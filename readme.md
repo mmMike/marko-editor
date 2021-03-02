@@ -52,8 +52,6 @@ While the source code is not perfect, parts of it might serve as examples for GT
 
 If you want to use it anyway, these are some of the issues to look out for:
 
-* Sometimes crash when moving the mouse over the settings menu. Currently not sure, if this might be a GTK issue.
-
 * The undo/redo stack currently doesn't know about the formatting.
 
 * The formatting works currently only on existing text and not directly while typing.

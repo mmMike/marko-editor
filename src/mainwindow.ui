@@ -159,7 +159,6 @@
                                         <child>
                                             <object class="GtkMenuButton">
                                                 <property name="icon-name">applications-graphics-symbolic</property>
-                                                <property name="tooltip-text" translatable="yes">Formatting</property>
                                                 <property name="can-focus">false</property>
                                                 <property name="has-frame">false</property>
                                                 <property name="menu-model">format_model</property>
@@ -235,7 +234,6 @@
                                         <child>
                                             <object class="GtkMenuButton" id="btn_menu">
                                                 <property name="icon-name">preferences-desktop-symbolic</property>
-                                                <property name="tooltip-text" translatable="yes">Settings</property>
                                                 <property name="can-focus">false</property>
                                                 <property name="has-frame">false</property>
                                                 <property name="menu-model">menu</property>
@@ -260,16 +258,16 @@
     <menu id="open_model">
         <section>
             <attribute name="display-hint">circular-buttons</attribute>
-                <item>
-                    <attribute name="verb-icon">user-home-symbolic</attribute>
-                    <attribute name="action">win.home</attribute>
-                    <attribute name="tooltip-text" translatable="yes">Open Startpage</attribute>
-                </item>
-                <item>
-                    <attribute name="verb-icon">document-new-symbolic</attribute>
-                    <attribute name="action">win.new</attribute>
-                    <attribute name="tooltip-text" translatable="yes">New</attribute>
-                </item>
+            <item>
+                <attribute name="verb-icon">user-home-symbolic</attribute>
+                <attribute name="action">win.home</attribute>
+                <attribute name="tooltip-text" translatable="yes">Open Startpage</attribute>
+            </item>
+            <item>
+                <attribute name="verb-icon">document-new-symbolic</attribute>
+                <attribute name="action">win.new</attribute>
+                <attribute name="tooltip-text" translatable="yes">New</attribute>
+            </item>
         </section>
         <section>
             <item>
