@@ -26,6 +26,9 @@ const CSS: &str = r#"
 textview {
     font-size: 12pt;
 }
+menubutton {
+  font-weight: bold;
+}
 "#;
 
 struct Ui {

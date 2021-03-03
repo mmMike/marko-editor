@@ -92,6 +92,9 @@ impl TextTagTable {
         let tag_code = TextTagTable::create_tag(Tag::CODE, &table);
         tag_code.set_property_family(Some("Monospace"));
         tag_code.set_property_paragraph_background_rgba(Some(&grey));
+        tag_code.set_property_left_margin(30);
+        tag_code.set_property_right_margin(30);
+        tag_code.set_property_indent(2);
 
         let tag_strike = TextTagTable::create_tag(Tag::STRIKE, &table);
         tag_strike.set_property_strikethrough(true);
