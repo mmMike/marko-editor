@@ -60,11 +60,12 @@ fn fetch_title<F: Fn(&str) + 'static>(url: &str, and_then: F) {
             if let Ok(text) = res.text() {
                 lazy_static! {
                     // ToDo: this is most likely not helpful with the async setup
-                    static ref RE: Regex = Regex::new(r"<title[^>]*>(.*)</title").unwrap();
+                    static ref RE: Regex = Regex::new(r"<title[^>]*>([^<]*)<").unwrap();
                 }
                 if let Some(caps) = RE.captures(&text) {
                     if let Some(c) = caps.get(1) {
-                        let decoded = String::from(html_escape::decode_html_entities(c.as_str()));
+                        let decoded =
+                            String::from(html_escape::decode_html_entities(c.as_str().trim()));
                         // Sending fails if the receiver is closed
                         let _ = sender.send(decoded);
                     }
