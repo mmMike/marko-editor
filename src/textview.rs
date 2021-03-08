@@ -584,10 +584,11 @@ impl TextView {
 
     fn get_mouse_release_handler(&self) -> gtk::GestureClick {
         let gesture = gtk::GestureClick::new();
-        gesture.connect_released({
+        gesture.connect_pressed({
             let this = self.clone();
-            move |gesture, _n_press, x, y| {
+            move |gesture, n_press, x, y| {
                 if this.buffer.get_has_selection()
+                    || n_press < 2
                     || gesture.clone().upcast::<gtk::GestureSingle>().get_button() > 1
                 {
                     return;
