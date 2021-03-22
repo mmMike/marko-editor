@@ -111,6 +111,7 @@ impl LinkEdit {
         this.btn_accept_link.connect_clicked(connect!(this.accept()));
         this.btn_cancel_link.connect_clicked(connect!(this.reject()));
         this.btn_fetch_title.connect_clicked(connect!(this.fetch_title()));
+        this.edt_link_name.connect_activate(connect!(this.accept()));
         this
     }
 
@@ -124,7 +125,7 @@ impl LinkEdit {
         self.link_edit_bar.set_search_mode(true);
         self.btn_is_image.set_active(link_data.is_image);
 
-        if link_data.link.is_empty() {
+        if link_data.link.is_empty() || link_data.link == link_data.text {
             lazy_static! {
                 static ref RE: Regex = Regex::new(r"^\w+://.*").unwrap();
             }
@@ -688,6 +689,7 @@ impl TextView {
             line_end.forward_to_line_end();
         }
         let text = buffer.get_text(&line_start, &line_end, false);
+        buffer.begin_user_action();
         if !text.is_empty() {
             buffer.insert(&mut line_end, NEWLINE);
         }
@@ -695,6 +697,7 @@ impl TextView {
         buffer.insert(&mut line_end, link.as_ref());
         buffer.apply_link_offset(&line_end, link.as_ref(), "", link_offset);
         buffer.place_cursor(&line_end);
+        buffer.end_user_action();
     }
 
     pub fn par_format(&self, format: Option<ParFormat>) {
