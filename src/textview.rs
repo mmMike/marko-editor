@@ -1,5 +1,5 @@
 use crate::textbufferext::TextBufferExt2;
-use crate::textbuffermd::TextBufferMd;
+use crate::textbuffermd::{TextBufferMd, NEWLINE};
 use crate::texttag::{CharFormat, ParFormat, Tag, TextTagExt2};
 use crate::texttagmanager::{TextEdit, TextTagManager};
 use crate::textviewext::TextViewExt2;
@@ -30,6 +30,8 @@ use std::thread;
 mod keys {
     pub use gdk::keys::constants::*;
 }
+
+const MARGIN: i32 = 10;
 
 pub struct LinkData {
     text: String,
@@ -372,16 +374,14 @@ impl TextView {
         let b = gtk::Builder::new();
         b.add_from_string(ui_src).expect("Couldn't add from string");
 
-        let margin = 10;
-
         let tags = Rc::new(TextTagManager::new());
         let buffer = gtk::TextBuffer::new(Some(tags.table()));
 
         let textview: gtk::TextView = builder_get!(b("textview"));
-        textview.set_top_margin(margin);
-        textview.set_bottom_margin(margin);
-        textview.set_left_margin(margin);
-        textview.set_right_margin(margin);
+        textview.set_top_margin(MARGIN);
+        textview.set_bottom_margin(MARGIN);
+        textview.set_left_margin(MARGIN);
+        textview.set_right_margin(MARGIN);
         textview.set_wrap_mode(gtk::WrapMode::Word);
         textview.set_pixels_above_lines(2);
         textview.set_pixels_below_lines(2);
@@ -419,6 +419,7 @@ impl TextView {
         this.textview.add_controller(&this.get_key_press_handler());
         this.textview.add_controller(&this.get_mouse_release_handler());
         this.textview.add_controller(&this.get_drag_handler());
+        this.textview.add_controller(&this.get_drop_handler());
         this.textview.set_buffer(Some(&this.buffer));
 
         this.textview.connect_query_tooltip({
@@ -624,6 +625,78 @@ impl TextView {
         drag
     }
 
+    fn get_drop_handler(&self) -> gtk::DropTargetAsync {
+        let builder = gdk::ContentFormatsBuilder::new();
+        builder.add_mime_type("text/x-moz-url");
+        let formats = builder.to_formats().unwrap();
+        let handler = gtk::DropTargetAsync::new(Some(&formats), gdk::DragAction::COPY);
+
+        handler.connect_accept({
+            |_target, drop| {
+                if let Some(f) = drop.get_formats() {
+                    // println!("Formats {}", f.to_str().as_str());
+                    return f.contain_mime_type("text/x-moz-url");
+                }
+                false
+            }
+        });
+
+        let (sender, receiver) =
+            gtk::glib::MainContext::channel::<(String, f64, f64)>(glib::PRIORITY_DEFAULT);
+        receiver.attach(None, {
+            let this = self.clone();
+            move |tuple| {
+                this.drop_link(&tuple.0, tuple.1, tuple.2);
+                // Returning false here would close the receiver and have senders fail
+                gtk::glib::Continue(true)
+            }
+        });
+
+        handler.connect_drop(move |_target, drop, x, y| {
+            if let Some(f) = drop.get_formats() {
+                if f.contain_mime_type("text/x-moz-url") {
+                    let s = sender.clone();
+                    drop.read_value_async(
+                        gtk::glib::Type::STRING,
+                        gtk::glib::PRIORITY_DEFAULT,
+                        None as Option<&gtk::gio::Cancellable>,
+                        move |result| {
+                            if let Ok(value) = result {
+                                if let Ok(Some(link)) = value.get::<&str>() {
+                                    let _ = s.send((link.to_string(), x, y));
+                                }
+                            }
+                        },
+                    );
+                    drop.finish(gdk::DragAction::COPY);
+                    return true;
+                }
+            }
+            false
+        });
+
+        handler
+    }
+
+    fn drop_link(&self, link: &String, x: f64, y: f64) {
+        let (_, by) =
+            self.textview.window_to_buffer_coords(gtk::TextWindowType::Text, x as i32, y as i32);
+        let line_start = self.textview.get_line_at_y(by).0;
+        let buffer = self.textview.get_buffer();
+        let mut line_end = line_start.clone();
+        if !line_end.ends_line() {
+            line_end.forward_to_line_end();
+        }
+        let text = buffer.get_text(&line_start, &line_end, false);
+        if !text.is_empty() {
+            buffer.insert(&mut line_end, NEWLINE);
+        }
+        let link_offset = line_end.get_offset();
+        buffer.insert(&mut line_end, link.as_ref());
+        buffer.apply_link_offset(&line_end, link.as_ref(), "", link_offset);
+        buffer.place_cursor(&line_end);
+    }
+
     pub fn par_format(&self, format: Option<ParFormat>) {
         let mut start = self.buffer.get_iter_at_mark(&self.buffer.get_insert());
         start.set_line(start.get_line());
@@ -656,6 +729,7 @@ impl TextView {
         let b = &self.buffer;
 
         let toggle_tag = |start: &gtk::TextIter, end: &gtk::TextIter| {
+            // ToDo: handle multiline formatting
             let tag = b.get_tag_table().lookup(tag_str).unwrap();
             b.begin_user_action();
             if start.has_tag(&tag) {

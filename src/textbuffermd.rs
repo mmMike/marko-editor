@@ -7,7 +7,7 @@ use pulldown_cmark::{CodeBlockKind, Event, Options, Parser};
 type CTag<'a> = pulldown_cmark::Tag<'a>;
 
 // Todo: Check if the newline handling work on other platforms as expected (e.g. Windows)
-const NEWLINE: &str = "\n";
+pub const NEWLINE: &str = "\n";
 const NEWLINE_CHAR: char = '\n';
 const BREAK: &str = "<br/>";
 const BREAK_NEWLINE: &str = "<br/>\n";
@@ -23,20 +23,7 @@ pub trait TextBufferMd {
     fn assign_markdown(&self, markdown: &str, buffer_is_modified: bool) -> &gtk::TextBuffer;
     fn apply_tag_offset(&self, iter: &mut gtk::TextIter, tag_name: &str, start_offset: i32);
     // ToDo: duplicated code for image and link
-    fn apply_image_offset(
-        &self,
-        iter: &mut gtk::TextIter,
-        image: &str,
-        title: &str,
-        start_offset: i32,
-    );
-    fn apply_link_offset(
-        &self,
-        iter: &mut gtk::TextIter,
-        link: &str,
-        title: &str,
-        start_offset: i32,
-    );
+    fn apply_image_offset(&self, iter: &gtk::TextIter, image: &str, title: &str, start_offset: i32);
 
     fn convert_colors(&self, tag: &str, pos_start: i32);
 }
@@ -440,7 +427,7 @@ impl TextBufferMd for gtk::TextBuffer {
 
     fn apply_image_offset(
         &self,
-        iter: &mut gtk::TextIter,
+        iter: &gtk::TextIter,
         image: &str,
         title: &str,
         start_offset: i32,
@@ -451,23 +438,6 @@ impl TextBufferMd for gtk::TextBuffer {
             self.create_image_tag(image)
         } else {
             self.create_image_tag(format!("{} \"{}\"", image, title).as_str())
-        };
-        self.apply_tag(&tag, &start, &iter);
-    }
-
-    fn apply_link_offset(
-        &self,
-        iter: &mut gtk::TextIter,
-        link: &str,
-        title: &str,
-        start_offset: i32,
-    ) {
-        let mut start = iter.clone();
-        start.backward_chars(iter.get_offset() - start_offset);
-        let tag = if title.is_empty() {
-            self.create_link_tag(link)
-        } else {
-            self.create_link_tag(format!("{} \"{}\"", link, title).as_str())
         };
         self.apply_tag(&tag, &start, &iter);
     }

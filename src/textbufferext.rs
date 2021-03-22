@@ -17,6 +17,7 @@ pub trait TextBufferExt2 {
     fn create_image_tag(&self, link: &str) -> gtk::TextTag;
     fn get_image_at_iter(&self, iter: &gtk::TextIter) -> Option<(String, gtk::TextTag)>;
 
+    fn apply_link_offset(&self, iter: &gtk::TextIter, link: &str, title: &str, start_offset: i32);
     fn create_link_tag(&self, link: &str) -> gtk::TextTag;
     fn get_link_at_iter(&self, iter: &gtk::TextIter) -> Option<(String, gtk::TextTag)>;
 
@@ -75,6 +76,17 @@ impl TextBufferExt2 for gtk::TextBuffer {
         }
 
         None
+    }
+
+    fn apply_link_offset(&self, iter: &gtk::TextIter, link: &str, title: &str, start_offset: i32) {
+        let mut start = iter.clone();
+        start.backward_chars(iter.get_offset() - start_offset);
+        let tag = if title.is_empty() {
+            self.create_link_tag(link)
+        } else {
+            self.create_link_tag(format!("{} \"{}\"", link, title).as_str())
+        };
+        self.apply_tag(&tag, &start, &iter);
     }
 
     fn create_link_tag(&self, link: &str) -> gtk::TextTag {
