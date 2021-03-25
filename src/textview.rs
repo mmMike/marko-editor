@@ -32,6 +32,7 @@ mod keys {
 }
 
 const MARGIN: i32 = 10;
+const TAB_WIDTH: i32 = 4;
 
 pub struct LinkData {
     text: String,
@@ -538,7 +539,14 @@ impl TextView {
                         }
                     }
                     return Inhibit(true);
-                } else if modifier.is_empty() {
+                } else if modifier == gdk::ModifierType::SHIFT_MASK {
+                    match key {
+                        keys::Tab | keys::ISO_Left_Tab => this.remove_tab(),
+                        _ => return Inhibit(false),
+                    }
+                    return Inhibit(true);
+                }
+                if modifier.is_empty() {
                     match key {
                         keys::F1 => this.char_format(CharFormat::GREEN),
                         keys::F2 => this.char_format(CharFormat::RED),
@@ -546,6 +554,7 @@ impl TextView {
                         keys::F4 => this.char_format(CharFormat::BLUE),
                         keys::F7 => this.dump(),
                         keys::F8 => this.turnaround(),
+                        keys::Tab | keys::ISO_Left_Tab => this.insert_tab(),
                         keys::KP_Enter | keys::Return => {
                             this.tags.text_edit(TextEdit::NewLine);
                             return Inhibit(false);
@@ -611,7 +620,7 @@ impl TextView {
             move |drag_source: &gtk::DragSource, x, y| -> Option<gdk::ContentProvider> {
                 if let Some(link) = this.textview.get_link_at_location(x, y) {
                     // a drag leaves a one char selection, this should be deleted
-                    let cursor = this.buffer.get_iter_at_mark(&this.buffer.get_insert());
+                    let cursor = this.buffer.get_insert_iter();
                     this.buffer.select_range(&cursor, &cursor);
 
                     let bytes = glib::Bytes::from(link.as_bytes());
@@ -701,7 +710,7 @@ impl TextView {
     }
 
     pub fn par_format(&self, format: Option<ParFormat>) {
-        let mut start = self.buffer.get_iter_at_mark(&self.buffer.get_insert());
+        let mut start = self.buffer.get_insert_iter();
         start.set_line(start.get_line());
         let mut end = start.clone();
         // ToDo: this might be a problem for empty lines
@@ -810,7 +819,7 @@ impl TextView {
             return;
         }
 
-        let mut start = self.buffer.get_iter_at_mark(&self.buffer.get_insert());
+        let mut start = self.buffer.get_insert_iter();
         let mut end = start.clone();
         let mut link = String::new();
         let mut is_image = false;
@@ -914,6 +923,29 @@ impl TextView {
         self.buffer.assign_markdown(&markdown, true);
         self.buffer.end_irreversible_action();
         self.buffer.place_cursor(&self.buffer.get_start_iter());
+    }
+
+    fn insert_tab(&self) {
+        let mut cursor = self.buffer.get_insert_iter();
+        let remainder = cursor.get_line_offset() % TAB_WIDTH;
+        self.buffer.insert(&mut cursor, &" ".repeat((4 - remainder) as usize));
+    }
+
+    fn remove_tab(&self) {
+        let mut cursor = self.buffer.get_insert_iter();
+        if !cursor.starts_line() {
+            cursor.set_line(cursor.get_line());
+        }
+        for _ in 0..TAB_WIDTH {
+            // ToDo: maybe other whitespace types should be considered
+            if cursor.get_char() == ' ' {
+                let mut end = cursor.clone();
+                end.forward_char();
+                self.buffer.delete(&mut cursor, &mut end);
+            } else {
+                break;
+            }
+        }
     }
 
     pub fn get_outline_model(&self, max_level: u32) -> gtk::ListStore {
