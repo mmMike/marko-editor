@@ -211,7 +211,7 @@ impl MainWindow {
                 css_combo_to_flat(c);
                 child = c.get_next_sibling();
             }
-        };
+        }
         css_combo_to_flat(&self.ui.outline_widget);
     }
 

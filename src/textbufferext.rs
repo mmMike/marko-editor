@@ -90,16 +90,19 @@ impl TextBufferExt2 for gtk::TextBuffer {
     }
 
     fn create_link_tag(&self, link: &str) -> gtk::TextTag {
-        // ToDo: this lookup might be slow
         let name = format!("{}{}", LINK_START, link);
+        let is_file = link.starts_with("file:///");
         let table = &self.get_tag_table();
+        // ToDo: this lookup might be slow
         if let Some(tag) = table.lookup(&name) {
             tag
         } else {
             static BLUE: gdk::RGBA = gdk::RGBA { red: 0f32, green: 0f32, blue: 1f32, alpha: 1f32 };
+            static ORANGE: gdk::RGBA =
+                gdk::RGBA { red: 0.9f32, green: 0.5f32, blue: 0f32, alpha: 1f32 };
             let link_tag = TextTagTable::create_tag(&name, table);
             link_tag.set_property_underline(gtk::pango::Underline::Single);
-            link_tag.set_property_foreground_rgba(Some(&BLUE));
+            link_tag.set_property_foreground_rgba(Some(if is_file { &ORANGE } else { &BLUE }));
             link_tag
         }
     }
