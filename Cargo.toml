@@ -13,8 +13,9 @@ bitflags = "1.2.*"
 log = "0.4"
 pulldown-cmark = { version = "0.8", default-features = false, features = ["simd"] }
 regex = "1"
-lazy_static = "1.4.0"
-html-escape = "0.2.6"
+lazy_static = "1.4.*"
+html-escape = "0.2.*"
+percent-encoding = "2.1.*"
 
 [dependencies.gtk]
 git = "https://github.com/gtk-rs/gtk4-rs"

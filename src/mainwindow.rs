@@ -133,7 +133,7 @@ impl MainWindow {
             move |s, path, _col| {
                 let model = s.get_model().unwrap();
                 if let Some(iter) = model.get_iter(path) {
-                    let line = model.get_value(&iter, 1).get::<i32>().unwrap().unwrap();
+                    let line = model.get(&iter, 1).get::<i32>().unwrap().unwrap();
                     t.scroll_to(line);
                 }
             }

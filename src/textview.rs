@@ -1,4 +1,4 @@
-use crate::textbufferext::TextBufferExt2;
+use crate::textbufferext::{get_file_name, is_file, TextBufferExt2};
 use crate::textbuffermd::{TextBufferMd, NEWLINE};
 use crate::texttag::{CharFormat, ParFormat, Tag, TextTagExt2};
 use crate::texttagmanager::{TextEdit, TextTagManager};
@@ -703,7 +703,12 @@ impl TextView {
             buffer.insert(&mut line_end, NEWLINE);
         }
         let link_offset = line_end.get_offset();
-        buffer.insert(&mut line_end, link.as_ref());
+        let link = link.trim();
+        if is_file(link) {
+            buffer.insert(&mut line_end, &get_file_name(link.as_ref()));
+        } else {
+            buffer.insert(&mut line_end, link.as_ref());
+        }
         buffer.apply_link_offset(&line_end, link.as_ref(), "", link_offset);
         buffer.place_cursor(&line_end);
         buffer.end_user_action();

@@ -4,9 +4,25 @@ use crate::texttagtable::TextTagTable;
 use gtk::TextBufferExt;
 use gtk::TextIter;
 use gtk::TextTagExt;
+use std::path::PathBuf;
 
 pub const LINK_START: &str = "LINK:";
 pub const IMAGE_START: &str = "IMAGE:";
+
+pub fn is_file(link: &str) -> bool {
+    link.starts_with("file:///")
+}
+
+pub fn get_file_name(link: &str) -> String {
+    let path = PathBuf::from(link);
+    if let Some(file) = path.file_name() {
+        percent_encoding::percent_decode_str(file.to_str().unwrap_or(link))
+            .decode_utf8_lossy()
+            .to_string()
+    } else {
+        link.to_string()
+    }
+}
 
 pub trait TextBufferExt2 {
     fn get_current_word_bounds(&self) -> Option<(TextIter, TextIter)>;
@@ -91,7 +107,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
 
     fn create_link_tag(&self, link: &str) -> gtk::TextTag {
         let name = format!("{}{}", LINK_START, link);
-        let is_file = link.starts_with("file:///");
+        let is_file = is_file(link);
         let table = &self.get_tag_table();
         // ToDo: this lookup might be slow
         if let Some(tag) = table.lookup(&name) {
