@@ -153,7 +153,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
 
         self.remove_all_tags(&start, &end);
         if let Some(f) = format {
-            let tag_name = Tag::from(&f);
+            let tag_name = Tag::from_par_format(&f);
             let tag = &self.get_tag_table().lookup(tag_name).unwrap();
             self.apply_tag(tag, &start, &end);
         }

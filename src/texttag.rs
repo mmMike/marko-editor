@@ -14,6 +14,9 @@ pub enum CharFormat {
     Yellow,
 }
 
+pub const COLORS: [CharFormat; 4] =
+    [CharFormat::Red, CharFormat::Green, CharFormat::Blue, CharFormat::Yellow];
+
 #[derive(Debug)]
 pub enum ParFormat {
     H1,
@@ -52,8 +55,21 @@ impl Tag {
     pub const RULE: &'static str = "rule";
     pub const MD_RULE: &'static str = "--- ---- ----- ------- ----- ---- ---";
 
-    pub fn from(par_format: &ParFormat) -> &str {
-        match par_format {
+    pub fn from_char_format(format: &CharFormat) -> &'static str {
+        match format {
+            CharFormat::Bold => Tag::BOLD,
+            CharFormat::Italic => Tag::ITALIC,
+            CharFormat::Mono => Tag::MONO,
+            CharFormat::Strike => Tag::STRIKE,
+            CharFormat::Red => Tag::RED,
+            CharFormat::Green => Tag::GREEN,
+            CharFormat::Blue => Tag::BLUE,
+            CharFormat::Yellow => Tag::YELLOW,
+        }
+    }
+
+    pub fn from_par_format(format: &ParFormat) -> &'static str {
+        match format {
             ParFormat::H1 => Tag::H1,
             ParFormat::H2 => Tag::H2,
             ParFormat::H3 => Tag::H3,

@@ -1,6 +1,6 @@
 use crate::textbufferext::{get_file_name, is_file, TextBufferExt2};
 use crate::textbuffermd::{TextBufferMd, NEWLINE};
-use crate::texttag::{CharFormat, ParFormat, Tag, TextTagExt2};
+use crate::texttag::{CharFormat, ParFormat, Tag, TextTagExt2, COLORS};
 use crate::texttagmanager::{TextEdit, TextTagManager};
 use crate::textviewext::TextViewExt2;
 use crate::{builder_get, connect, connect_fwd1};
@@ -742,17 +742,7 @@ impl TextView {
             return;
         }
 
-        let tag_str = match format {
-            CharFormat::Bold => Tag::BOLD,
-            CharFormat::Italic => Tag::ITALIC,
-            CharFormat::Mono => Tag::MONO,
-            CharFormat::Strike => Tag::STRIKE,
-            CharFormat::Red => Tag::RED,
-            CharFormat::Green => Tag::GREEN,
-            CharFormat::Blue => Tag::BLUE,
-            CharFormat::Yellow => Tag::YELLOW,
-        };
-
+        let tag_str = Tag::from_char_format(&format);
         let b = &self.buffer;
 
         let toggle_tag = |start: &gtk::TextIter, end: &gtk::TextIter| {
@@ -762,6 +752,13 @@ impl TextView {
             if start.has_tag(&tag) {
                 b.remove_tag(&tag, &start, &end);
             } else {
+                if COLORS.contains(&format) {
+                    for c in &COLORS {
+                        let tag = b.get_tag_table().lookup(Tag::from_char_format(&c)).unwrap();
+                        b.remove_tag(&tag, &start, &end);
+                    }
+                }
+
                 b.apply_tag(&tag, &start, &end);
             }
             b.end_user_action();
