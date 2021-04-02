@@ -48,7 +48,7 @@ fn blocking_get(url: &str) -> Result<reqwest::blocking::Response, reqwest::Error
     let custom = reqwest::redirect::Policy::custom(|attempt| attempt.follow());
     let client =
         reqwest::blocking::Client::builder().redirect(custom).user_agent("Wget/1.21.1").build()?;
-    Ok(client.get(url).send()?)
+    client.get(url).send()
 }
 
 fn fetch_title<F: Fn(&str) + 'static>(url: &str, and_then: F) {
@@ -518,13 +518,13 @@ impl TextView {
                         keys::_4 => this.par_format(Some(ParFormat::H4)),
                         keys::_5 => this.par_format(Some(ParFormat::H5)),
                         keys::_6 => this.par_format(Some(ParFormat::H6)),
-                        keys::b => this.char_format(CharFormat::BOLD),
-                        keys::d => this.char_format(CharFormat::STRIKE),
-                        keys::i => this.char_format(CharFormat::ITALIC),
+                        keys::b => this.char_format(CharFormat::Bold),
+                        keys::d => this.char_format(CharFormat::Strike),
+                        keys::i => this.char_format(CharFormat::Italic),
                         keys::f => this.open_search(),
                         keys::l => this.edit_link(),
                         keys::n => this.apply_text_clear(),
-                        keys::t => this.char_format(CharFormat::MONO),
+                        keys::t => this.char_format(CharFormat::Mono),
                         keys::y => this.redo(),
                         keys::z => {
                             if (modifier & gdk::ModifierType::SHIFT_MASK).is_empty() {
@@ -550,10 +550,10 @@ impl TextView {
                 }
                 if modifier.is_empty() {
                     match key {
-                        keys::F1 => this.char_format(CharFormat::GREEN),
-                        keys::F2 => this.char_format(CharFormat::RED),
-                        keys::F3 => this.char_format(CharFormat::YELLOW),
-                        keys::F4 => this.char_format(CharFormat::BLUE),
+                        keys::F1 => this.char_format(CharFormat::Green),
+                        keys::F2 => this.char_format(CharFormat::Red),
+                        keys::F3 => this.char_format(CharFormat::Yellow),
+                        keys::F4 => this.char_format(CharFormat::Blue),
                         keys::F7 => this.dump(),
                         keys::F8 => this.turnaround(),
                         keys::Tab | keys::ISO_Left_Tab => this.insert_tab(),
@@ -690,7 +690,7 @@ impl TextView {
         handler
     }
 
-    fn drop_link(&self, link: &String, x: f64, y: f64) {
+    fn drop_link(&self, link: &str, x: f64, y: f64) {
         let (_, by) =
             self.textview.window_to_buffer_coords(gtk::TextWindowType::Text, x as i32, y as i32);
         let line_start = self.textview.get_line_at_y(by).0;
@@ -707,7 +707,7 @@ impl TextView {
         let link_offset = line_end.get_offset();
         let link = link.trim();
         if is_file(link) {
-            buffer.insert(&mut line_end, &get_file_name(link.as_ref()));
+            buffer.insert(&mut line_end, &get_file_name(link));
         } else {
             buffer.insert(&mut line_end, link.as_ref());
         }
@@ -743,14 +743,14 @@ impl TextView {
         }
 
         let tag_str = match format {
-            CharFormat::BOLD => Tag::BOLD,
-            CharFormat::ITALIC => Tag::ITALIC,
-            CharFormat::MONO => Tag::MONO,
-            CharFormat::STRIKE => Tag::STRIKE,
-            CharFormat::RED => Tag::RED,
-            CharFormat::GREEN => Tag::GREEN,
-            CharFormat::BLUE => Tag::BLUE,
-            CharFormat::YELLOW => Tag::YELLOW,
+            CharFormat::Bold => Tag::BOLD,
+            CharFormat::Italic => Tag::ITALIC,
+            CharFormat::Mono => Tag::MONO,
+            CharFormat::Strike => Tag::STRIKE,
+            CharFormat::Red => Tag::RED,
+            CharFormat::Green => Tag::GREEN,
+            CharFormat::Blue => Tag::BLUE,
+            CharFormat::Yellow => Tag::YELLOW,
         };
 
         let b = &self.buffer;
@@ -771,8 +771,8 @@ impl TextView {
             if end.starts_line() {
                 end.backward_char();
             }
-            if format == CharFormat::MONO && start.starts_line() && end.ends_line() {
-                b.apply_paragraph_format(Some(ParFormat::CODE), &start, &end);
+            if format == CharFormat::Mono && start.starts_line() && end.ends_line() {
+                b.apply_paragraph_format(Some(ParFormat::Code), &start, &end);
             } else {
                 toggle_tag(&start, &end);
             }

@@ -13,8 +13,7 @@ pub trait TextViewExt2 {
 impl TextViewExt2 for gtk::TextView {
     fn get_iter_at_coord(&self, x: f64, y: f64) -> Option<gtk::TextIter> {
         let (bx, by) = self.window_to_buffer_coords(gtk::TextWindowType::Text, x as i32, y as i32);
-        let res = self.get_iter_at_location(bx, by);
-        res
+        self.get_iter_at_location(bx, by)
     }
 
     fn get_image_at_location(&self, x: f64, y: f64) -> Option<String> {

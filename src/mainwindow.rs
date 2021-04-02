@@ -116,10 +116,10 @@ impl MainWindow {
 
         let t = &this.ui.text_view;
         this.ui.btn_clear.connect_clicked(connect!(t.apply_text_clear()));
-        this.ui.btn_bold.connect_clicked(connect!(t.char_format(CharFormat::BOLD)));
-        this.ui.btn_italic.connect_clicked(connect!(t.char_format(CharFormat::ITALIC)));
-        this.ui.btn_code.connect_clicked(connect!(t.char_format(CharFormat::MONO)));
-        this.ui.btn_strike.connect_clicked(connect!(t.char_format(CharFormat::STRIKE)));
+        this.ui.btn_bold.connect_clicked(connect!(t.char_format(CharFormat::Bold)));
+        this.ui.btn_italic.connect_clicked(connect!(t.char_format(CharFormat::Italic)));
+        this.ui.btn_code.connect_clicked(connect!(t.char_format(CharFormat::Mono)));
+        this.ui.btn_strike.connect_clicked(connect!(t.char_format(CharFormat::Strike)));
         this.ui.btn_link.connect_clicked(connect!(t.edit_link()));
         this.ui.btn_undo.connect_clicked(connect!(t.undo()));
         this.ui.btn_redo.connect_clicked(connect!(t.redo()));
@@ -155,10 +155,10 @@ impl MainWindow {
         this.setup_action("header_5", connect_action_plain!(t.par_format(Some(ParFormat::H5))));
         this.setup_action("header_6", connect_action_plain!(t.par_format(Some(ParFormat::H6))));
 
-        this.setup_action("green", connect_action_plain!(t.char_format(CharFormat::GREEN)));
-        this.setup_action("red", connect_action_plain!(t.char_format(CharFormat::RED)));
-        this.setup_action("yellow", connect_action_plain!(t.char_format(CharFormat::YELLOW)));
-        this.setup_action("blue", connect_action_plain!(t.char_format(CharFormat::BLUE)));
+        this.setup_action("green", connect_action_plain!(t.char_format(CharFormat::Green)));
+        this.setup_action("red", connect_action_plain!(t.char_format(CharFormat::Red)));
+        this.setup_action("yellow", connect_action_plain!(t.char_format(CharFormat::Yellow)));
+        this.setup_action("blue", connect_action_plain!(t.char_format(CharFormat::Blue)));
 
         this.setup_action("clear_startpage", connect_action_plain!(this.act_clear_startpage()));
         this.setup_action("set_startpage", connect_action_plain!(this.act_set_startpage()));
@@ -236,9 +236,9 @@ impl MainWindow {
         self.set_filename(&filename);
     }
 
-    fn open_file(&self, filename: &PathBuf) {
+    fn open_file(&self, filename: &Path) {
         self.close_file(Rc::new({
-            let f = filename.clone();
+            let f = filename.to_path_buf();
             move |s: &MainWindow| {
                 if let Ok(file) = File::open(f.as_path()) {
                     let mut reader = BufReader::new(file);
@@ -412,8 +412,8 @@ impl MainWindow {
         dlg.show();
     }
 
-    fn set_filename(&self, filename: &PathBuf) {
-        self.file.replace(Some(filename.clone()));
+    fn set_filename(&self, filename: &Path) {
+        self.file.replace(Some(filename.to_path_buf()));
         self.set_title();
     }
 

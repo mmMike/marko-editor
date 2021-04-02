@@ -3,15 +3,15 @@ use gtk::TextTagExt;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum CharFormat {
-    BOLD,
-    ITALIC,
-    MONO,
-    STRIKE,
+    Bold,
+    Italic,
+    Mono,
+    Strike,
 
-    RED,
-    GREEN,
-    BLUE,
-    YELLOW,
+    Red,
+    Green,
+    Blue,
+    Yellow,
 }
 
 #[derive(Debug)]
@@ -22,7 +22,7 @@ pub enum ParFormat {
     H4,
     H5,
     H6,
-    CODE,
+    Code,
 }
 
 pub struct Tag {}
@@ -60,7 +60,7 @@ impl Tag {
             ParFormat::H4 => Tag::H4,
             ParFormat::H5 => Tag::H5,
             ParFormat::H6 => Tag::H6,
-            ParFormat::CODE => Tag::CODE,
+            ParFormat::Code => Tag::CODE,
         }
     }
 
@@ -119,7 +119,7 @@ impl TextTagExt2 for gtk::TextTag {
             Tag::H4 => Some(ParFormat::H4),
             Tag::H5 => Some(ParFormat::H5),
             Tag::H6 => Some(ParFormat::H6),
-            Tag::CODE => Some(ParFormat::CODE),
+            Tag::CODE => Some(ParFormat::Code),
             _ => None,
         }
     }
