@@ -421,6 +421,7 @@ impl MainWindow {
         self.ui.text_view.clear();
         self.file.replace(None);
         self.set_title();
+        self.update_outline();
         self.ui.text_view.set_not_modified();
     }
 

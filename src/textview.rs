@@ -715,6 +715,10 @@ impl TextView {
     }
 
     pub fn par_format(&self, format: Option<ParFormat>) {
+        if !self.is_editable() {
+            return;
+        }
+
         let mut start = self.buffer.get_insert_iter();
         start.set_line(start.get_line());
         let mut end = start.clone();
@@ -732,6 +736,10 @@ impl TextView {
     // The MONO format is used as long as the selection doesn't consist of complete lines
     // ToDo: The implementation is far from complete
     pub fn char_format(&self, format: CharFormat) {
+        if !self.is_editable() {
+            return;
+        }
+
         let tag_str = match format {
             CharFormat::BOLD => Tag::BOLD,
             CharFormat::ITALIC => Tag::ITALIC,
@@ -774,6 +782,9 @@ impl TextView {
     }
 
     pub fn apply_text_clear(&self) {
+        if !self.is_editable() {
+            return;
+        }
         let clear = |start: &gtk::TextIter, end: &gtk::TextIter| {
             // Remove overlapping paragraph tags on the whole paragraph
             for line in start.get_line()..end.get_line() + 1 {
@@ -885,10 +896,16 @@ impl TextView {
     }
 
     pub fn undo(&self) {
+        if !self.is_editable() {
+            return;
+        }
         self.buffer.undo();
     }
 
     pub fn redo(&self) {
+        if !self.is_editable() {
+            return;
+        }
         self.buffer.redo();
     }
 
@@ -897,7 +914,9 @@ impl TextView {
     }
 
     pub fn clear(&self) {
+        self.buffer.begin_irreversible_action();
         self.buffer.delete(&mut self.buffer.get_start_iter(), &mut self.buffer.get_end_iter());
+        self.buffer.end_irreversible_action();
     }
 
     pub fn insert_markdown(&self, markdown: &str, clear: bool) {
