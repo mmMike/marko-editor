@@ -38,6 +38,13 @@ pub trait TextBufferExt2 {
     fn get_link_at_iter(&self, iter: &gtk::TextIter) -> Option<(String, gtk::TextTag)>;
 
     fn apply_paragraph_format(&self, format: Option<ParFormat>, start: &TextIter, end: &TextIter);
+
+    fn get_new_mark_at(
+        &self,
+        name: Option<&str>,
+        left_gravity: bool,
+        where_: &gtk::TextIter,
+    ) -> gtk::TextMark;
 }
 
 impl TextBufferExt2 for gtk::TextBuffer {
@@ -152,5 +159,16 @@ impl TextBufferExt2 for gtk::TextBuffer {
         }
 
         self.end_user_action();
+    }
+
+    fn get_new_mark_at(
+        &self,
+        name: Option<&str>,
+        left_gravity: bool,
+        where_: &gtk::TextIter,
+    ) -> gtk::TextMark {
+        let mark = gtk::TextMark::new(name, left_gravity);
+        self.add_mark(&mark, where_);
+        mark
     }
 }

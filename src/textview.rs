@@ -533,6 +533,8 @@ impl TextView {
                                 this.redo();
                             }
                         }
+                        keys::Down => this.text_move(false),
+                        keys::Up => this.text_move(true),
                         _ => {
                             println!("Unmapped key {} mod {} code {}.", key, modifier, _code);
                             return Inhibit(false);
@@ -969,6 +971,86 @@ impl TextView {
             } else {
                 break;
             }
+        }
+    }
+
+    fn text_move(&self, up: bool) {
+        if !self.is_editable() {
+            return;
+        }
+        let b = &self.buffer;
+        let mut start = b.get_insert_iter();
+        let mut end = start.clone();
+        let mut has_selection = false;
+        if let Some((s, e)) = b.get_selection_bounds() {
+            start = s;
+            end = e;
+            if end.starts_line() {
+                end.backward_line();
+                end.forward_to_line_end();
+            }
+            has_selection = true;
+        }
+
+        let line_start = start.get_line();
+        let line_end = end.get_line();
+        if (line_start == 0 && up) || (line_end == b.get_line_count() - 1 && !up) {
+            return;
+        }
+        let line_count = end.get_line() - start.get_line() + 1;
+
+        start.set_line(line_start); // move start to line beginning
+        let add_ending_nl = end.get_line() == b.get_line_count() - 1; // moving up!
+        let mut add_beginning_nl = false; // moving down!
+        end.forward_line();
+
+        let mut insert = start.clone();
+        if up {
+            insert.backward_line();
+        } else {
+            insert = end.clone();
+            insert.forward_to_line_end();
+            if insert.is_end() {
+                add_beginning_nl = true;
+            } else {
+                insert.forward_line();
+            }
+        }
+
+        let mark_insert = b.get_new_mark_at(None, true, &insert);
+        let other = gtk::TextBuffer::new(Some(&self.buffer.get_tag_table()));
+        if add_beginning_nl {
+            other.insert_at_cursor(NEWLINE);
+            let mut end = end.clone();
+            end.backward_char();
+            other.insert_range(&mut other.get_end_iter(), &start, &end);
+        } else {
+            other.insert_range(&mut other.get_end_iter(), &start, &end);
+        }
+        if add_ending_nl {
+            other.insert_at_cursor(NEWLINE);
+            start.backward_char();
+        }
+
+        b.begin_user_action();
+        b.delete(&mut start, &mut end);
+        b.insert_range(
+            &mut b.get_iter_at_mark(&mark_insert),
+            &other.get_start_iter(),
+            &other.get_end_iter(),
+        );
+        b.end_user_action();
+
+        let mut cursor = b.get_iter_at_mark(&mark_insert);
+        if add_beginning_nl {
+            cursor.forward_line();
+        }
+        if has_selection {
+            let mut sel_end = cursor.clone();
+            sel_end.forward_lines(line_count);
+            b.select_range(&cursor, &sel_end);
+        } else {
+            b.place_cursor(&cursor);
         }
     }
 
