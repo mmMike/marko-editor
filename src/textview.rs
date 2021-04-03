@@ -913,18 +913,16 @@ impl TextView {
     }
 
     pub fn clear(&self) {
-        self.buffer.begin_irreversible_action();
-        self.buffer.delete(&mut self.buffer.get_start_iter(), &mut self.buffer.get_end_iter());
-        self.buffer.end_irreversible_action();
+        self.buffer.clear();
     }
 
     pub fn insert_markdown(&self, markdown: &str, clear: bool) {
-        self.buffer.begin_irreversible_action();
+        self.buffer.begin_user_action();
         if clear {
-            self.clear();
+            self.buffer.clear();
         }
         self.buffer.insert_markdown(&mut self.buffer.get_insert_iter(), markdown);
-        self.buffer.end_irreversible_action();
+        self.buffer.end_user_action();
     }
 
     pub fn new_content_markdown(&self, markdown: &str) {
@@ -949,12 +947,18 @@ impl TextView {
     }
 
     fn insert_tab(&self) {
+        if !self.is_editable() {
+            return;
+        }
         let mut cursor = self.buffer.get_insert_iter();
         let remainder = cursor.get_line_offset() % TAB_WIDTH;
         self.buffer.insert(&mut cursor, &" ".repeat((4 - remainder) as usize));
     }
 
     fn remove_tab(&self) {
+        if !self.is_editable() {
+            return;
+        }
         let mut cursor = self.buffer.get_insert_iter();
         if !cursor.starts_line() {
             cursor.set_line(cursor.get_line());
@@ -975,80 +979,7 @@ impl TextView {
         if !self.is_editable() {
             return;
         }
-        let b = &self.buffer;
-        let mut start = b.get_insert_iter();
-        let mut end = start.clone();
-        let mut has_selection = false;
-        if let Some((s, e)) = b.get_selection_bounds() {
-            start = s;
-            end = e;
-            if end.starts_line() {
-                end.backward_line();
-                end.forward_to_line_end();
-            }
-            has_selection = true;
-        }
-
-        let line_start = start.get_line();
-        let line_end = end.get_line();
-        if (line_start == 0 && up) || (line_end == b.get_line_count() - 1 && !up) {
-            return;
-        }
-        let line_count = end.get_line() - start.get_line() + 1;
-
-        start.set_line(line_start); // move start to line beginning
-        let add_ending_nl = end.get_line() == b.get_line_count() - 1; // moving up!
-        let mut add_beginning_nl = false; // moving down!
-        end.forward_line();
-
-        let mut insert = start.clone();
-        if up {
-            insert.backward_line();
-        } else {
-            insert = end.clone();
-            insert.forward_to_line_end();
-            if insert.is_end() {
-                add_beginning_nl = true;
-            } else {
-                insert.forward_line();
-            }
-        }
-
-        let mark_insert = b.get_new_mark_at(None, true, &insert);
-        let other = gtk::TextBuffer::new(Some(&self.buffer.get_tag_table()));
-        if add_beginning_nl {
-            other.insert_at_cursor(NEWLINE);
-            let mut end = end.clone();
-            end.backward_char();
-            other.insert_range(&mut other.get_end_iter(), &start, &end);
-        } else {
-            other.insert_range(&mut other.get_end_iter(), &start, &end);
-        }
-        if add_ending_nl {
-            other.insert_at_cursor(NEWLINE);
-            start.backward_char();
-        }
-
-        b.begin_user_action();
-        b.delete(&mut start, &mut end);
-        b.insert_range(
-            &mut b.get_iter_at_mark(&mark_insert),
-            &other.get_start_iter(),
-            &other.get_end_iter(),
-        );
-        b.end_user_action();
-
-        let mut cursor = b.get_iter_at_mark(&mark_insert);
-        if add_beginning_nl {
-            cursor.forward_line();
-        }
-        if has_selection {
-            let mut sel_end = cursor.clone();
-            sel_end.forward_lines(line_count);
-            b.select_range(&cursor, &sel_end);
-        } else {
-            b.place_cursor(&cursor);
-        }
+        self.buffer.text_move(up);
     }
 
     pub fn get_outline_model(&self, max_level: u32) -> gtk::ListStore {
