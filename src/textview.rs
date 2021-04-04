@@ -637,54 +637,31 @@ impl TextView {
         drag
     }
 
-    fn get_drop_handler(&self) -> gtk::DropTargetAsync {
-        let builder = gdk::ContentFormatsBuilder::new();
-        builder.add_mime_type("text/x-moz-url");
-        let formats = builder.to_formats().unwrap();
-        let handler = gtk::DropTargetAsync::new(Some(&formats), gdk::DragAction::COPY);
+    fn get_drop_handler(&self) -> gtk::DropTarget {
+        let mime_uri: &str = "text/uri-list";
+        let mime_moz: &str = "text/x-moz-url";
+
+        let handler = gtk::DropTarget::new(glib::Type::STRING, gdk::DragAction::COPY);
+        handler.set_gtypes(&[glib::Type::STRING, gtk::gio::File::static_type()]);
 
         handler.connect_accept({
-            |_target, drop| {
+            move |_target, drop| {
                 if let Some(f) = drop.get_formats() {
-                    // println!("Formats {}", f.to_str().as_str());
-                    return f.contain_mime_type("text/x-moz-url");
+                    return f.contain_mime_type(&mime_moz) || f.contain_mime_type(&mime_uri);
                 }
                 false
             }
         });
 
-        let (sender, receiver) =
-            gtk::glib::MainContext::channel::<(String, f64, f64)>(glib::PRIORITY_DEFAULT);
-        receiver.attach(None, {
+        handler.connect_drop({
             let this = self.clone();
-            move |tuple| {
-                this.drop_link(&tuple.0, tuple.1, tuple.2);
-                // Returning false here would close the receiver and have senders fail
-                gtk::glib::Continue(true)
-            }
-        });
-
-        handler.connect_drop(move |_target, drop, x, y| {
-            if let Some(f) = drop.get_formats() {
-                if f.contain_mime_type("text/x-moz-url") {
-                    let s = sender.clone();
-                    drop.read_value_async(
-                        gtk::glib::Type::STRING,
-                        gtk::glib::PRIORITY_DEFAULT,
-                        None as Option<&gtk::gio::Cancellable>,
-                        move |result| {
-                            if let Ok(value) = result {
-                                if let Ok(Some(link)) = value.get::<&str>() {
-                                    let _ = s.send((link.to_string(), x, y));
-                                }
-                            }
-                        },
-                    );
-                    drop.finish(gdk::DragAction::COPY);
+            move |_drop, value, x, y| {
+                if let Ok(Some(link)) = value.get::<&str>() {
+                    this.drop_link(link, x, y);
                     return true;
                 }
+                false
             }
-            false
         });
 
         handler
