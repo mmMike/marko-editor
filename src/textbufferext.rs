@@ -55,7 +55,7 @@ pub trait TextBufferExt2 {
 impl TextBufferExt2 for gtk::TextBuffer {
     fn clear(&self) {
         self.begin_irreversible_action();
-        self.delete(&mut self.get_start_iter(), &mut self.get_end_iter());
+        self.delete(&mut self.start_iter(), &mut self.end_iter());
         self.end_irreversible_action();
     }
 
@@ -81,21 +81,21 @@ impl TextBufferExt2 for gtk::TextBuffer {
     fn create_image_tag(&self, link: &str) -> gtk::TextTag {
         // ToDo: this lookup might be slow
         let name = format!("{}{}", IMAGE_START, link);
-        let table = &self.get_tag_table();
+        let table = &self.tag_table();
         if let Some(tag) = table.lookup(&name) {
             tag
         } else {
             static GREEN: gdk::RGBA =
                 gdk::RGBA { red: 0f32, green: 0.75f32, blue: 0f32, alpha: 1f32 };
             let link_tag = TextTagTable::create_tag(&name, table);
-            link_tag.set_property_underline(gtk::pango::Underline::Single);
-            link_tag.set_property_foreground_rgba(Some(&GREEN));
+            link_tag.set_underline(gtk::pango::Underline::Single);
+            link_tag.set_foreground_rgba(Some(&GREEN));
             link_tag
         }
     }
 
     fn get_image_at_iter(&self, iter: &TextIter) -> Option<(String, gtk::TextTag)> {
-        let tags = iter.get_tags();
+        let tags = iter.tags();
         for tag in tags {
             if let Some(image) = tag.get_image() {
                 return Some((image, tag));
@@ -114,7 +114,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
 
     fn apply_link_offset(&self, iter: &gtk::TextIter, link: &str, title: &str, start_offset: i32) {
         let mut start = iter.clone();
-        start.backward_chars(iter.get_offset() - start_offset);
+        start.backward_chars(iter.offset() - start_offset);
         let tag = if title.is_empty() {
             self.create_link_tag(link)
         } else {
@@ -126,7 +126,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
     fn create_link_tag(&self, link: &str) -> gtk::TextTag {
         let name = format!("{}{}", LINK_START, link);
         let is_file = is_file(link);
-        let table = &self.get_tag_table();
+        let table = &self.tag_table();
         // ToDo: this lookup might be slow
         if let Some(tag) = table.lookup(&name) {
             tag
@@ -135,14 +135,14 @@ impl TextBufferExt2 for gtk::TextBuffer {
             static ORANGE: gdk::RGBA =
                 gdk::RGBA { red: 0.9f32, green: 0.5f32, blue: 0f32, alpha: 1f32 };
             let link_tag = TextTagTable::create_tag(&name, table);
-            link_tag.set_property_underline(gtk::pango::Underline::Single);
-            link_tag.set_property_foreground_rgba(Some(if is_file { &ORANGE } else { &BLUE }));
+            link_tag.set_underline(gtk::pango::Underline::Single);
+            link_tag.set_foreground_rgba(Some(if is_file { &ORANGE } else { &BLUE }));
             link_tag
         }
     }
 
     fn get_link_at_iter(&self, iter: &TextIter) -> Option<(String, gtk::TextTag)> {
-        let tags = iter.get_tags();
+        let tags = iter.tags();
         for tag in tags {
             if let Some(link) = tag.get_link() {
                 return Some((link, tag));
@@ -165,7 +165,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
         self.remove_all_tags(&start, &end);
         if let Some(f) = format {
             let tag_name = Tag::from_par_format(&f);
-            let tag = &self.get_tag_table().lookup(tag_name).unwrap();
+            let tag = &self.tag_table().lookup(tag_name).unwrap();
             self.apply_tag(tag, &start, &end);
         }
 
@@ -189,7 +189,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
         let mut start = self.get_insert_iter();
         let mut end = start.clone();
         let mut has_selection = false;
-        if let Some((s, e)) = self.get_selection_bounds() {
+        if let Some((s, e)) = self.selection_bounds() {
             start = s;
             end = e;
             if end.starts_line() {
@@ -201,14 +201,14 @@ impl TextBufferExt2 for gtk::TextBuffer {
             has_selection = true;
         }
 
-        let line_start = start.get_line();
-        let line_end = end.get_line();
-        if (line_start == 0 && up) || (line_end == self.get_line_count() - 1 && !up) {
+        let line_start = start.line();
+        let line_end = end.line();
+        if (line_start == 0 && up) || (line_end == self.line_count() - 1 && !up) {
             return;
         }
 
         start.set_line(line_start); // move start to line beginning
-        let add_ending_nl = line_end == self.get_line_count() - 1; // only when moving up!
+        let add_ending_nl = line_end == self.line_count() - 1; // only when moving up!
         let mut add_beginning_nl = false; // only when moving down!
         end.forward_line();
 
@@ -230,13 +230,13 @@ impl TextBufferExt2 for gtk::TextBuffer {
         let mark_insert = self.get_new_mark_at(None, true, &insert);
 
         // copy the content to another buffer
-        let other = gtk::TextBuffer::new(Some(&self.get_tag_table()));
+        let other = gtk::TextBuffer::new(Some(&self.tag_table()));
         let mut end_for_copy = end.clone();
         if add_beginning_nl {
             other.insert_at_cursor(NEWLINE);
             end_for_copy.backward_char();
         }
-        other.insert_range(&mut other.get_end_iter(), &start, &end_for_copy);
+        other.insert_range(&mut other.end_iter(), &start, &end_for_copy);
         if add_ending_nl {
             other.insert_at_cursor(NEWLINE);
             start.backward_char();
@@ -247,8 +247,8 @@ impl TextBufferExt2 for gtk::TextBuffer {
         self.delete(&mut start, &mut end);
         self.insert_range(
             &mut self.get_iter_at_mark(&mark_insert),
-            &other.get_start_iter(),
-            &other.get_end_iter(),
+            &other.start_iter(),
+            &other.end_iter(),
         );
         self.end_user_action();
 

@@ -104,7 +104,7 @@ pub trait TextTagExt2 {
 
 impl TextTagExt2 for gtk::TextTag {
     fn get_name(&self) -> String {
-        String::from(self.get_property_name().unwrap().as_str())
+        String::from(self.name().unwrap().as_str())
     }
 
     fn get_image(&self) -> Option<String> {

@@ -43,81 +43,81 @@ impl TextTagTable {
         let table = gtk::TextTagTable::new();
 
         let tag_h1 = TextTagTable::create_tag(Tag::H1, &table);
-        tag_h1.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
-        tag_h1.set_property_size_points(24f64);
-        tag_h1.set_property_pixels_above_lines(8);
-        tag_h1.set_property_pixels_below_lines(4);
+        tag_h1.set_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
+        tag_h1.set_size_points(24f64);
+        tag_h1.set_pixels_above_lines(8);
+        tag_h1.set_pixels_below_lines(4);
 
         let tag_h2 = TextTagTable::create_tag(Tag::H2, &table);
-        tag_h2.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
-        tag_h2.set_property_size_points(22f64);
-        tag_h2.set_property_pixels_above_lines(7);
-        tag_h2.set_property_pixels_below_lines(4);
+        tag_h2.set_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
+        tag_h2.set_size_points(22f64);
+        tag_h2.set_pixels_above_lines(7);
+        tag_h2.set_pixels_below_lines(4);
 
         let tag_h3 = TextTagTable::create_tag(Tag::H3, &table);
-        tag_h3.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
-        tag_h3.set_property_size_points(20f64);
-        tag_h3.set_property_pixels_above_lines(6);
-        tag_h3.set_property_pixels_below_lines(4);
+        tag_h3.set_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
+        tag_h3.set_size_points(20f64);
+        tag_h3.set_pixels_above_lines(6);
+        tag_h3.set_pixels_below_lines(4);
 
         let tag_h4 = TextTagTable::create_tag(Tag::H4, &table);
-        tag_h4.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
-        tag_h4.set_property_size_points(18f64);
-        tag_h4.set_property_pixels_above_lines(5);
-        tag_h4.set_property_pixels_below_lines(4);
+        tag_h4.set_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
+        tag_h4.set_size_points(18f64);
+        tag_h4.set_pixels_above_lines(5);
+        tag_h4.set_pixels_below_lines(4);
 
         let tag_h5 = TextTagTable::create_tag(Tag::H5, &table);
-        tag_h5.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
-        tag_h5.set_property_size_points(16f64);
-        tag_h5.set_property_pixels_above_lines(4);
-        tag_h5.set_property_pixels_below_lines(4);
+        tag_h5.set_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
+        tag_h5.set_size_points(16f64);
+        tag_h5.set_pixels_above_lines(4);
+        tag_h5.set_pixels_below_lines(4);
 
         let tag_h6 = TextTagTable::create_tag(Tag::H6, &table);
-        tag_h6.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
-        tag_h6.set_property_size_points(14f64);
-        tag_h6.set_property_pixels_above_lines(4);
-        tag_h6.set_property_pixels_below_lines(4);
+        tag_h6.set_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
+        tag_h6.set_size_points(14f64);
+        tag_h6.set_pixels_above_lines(4);
+        tag_h6.set_pixels_below_lines(4);
 
         let tag_bold = TextTagTable::create_tag(Tag::BOLD, &table);
-        tag_bold.set_property_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
+        tag_bold.set_weight(gtk::pango::ffi::PANGO_WEIGHT_BOLD);
 
         let tag_italic = TextTagTable::create_tag(Tag::ITALIC, &table);
-        tag_italic.set_property_style(gtk::pango::Style::Italic);
+        tag_italic.set_style(gtk::pango::Style::Italic);
 
         let tag_mono = TextTagTable::create_tag(Tag::MONO, &table);
-        tag_mono.set_property_family(Some("Monospace"));
+        tag_mono.set_family(Some("Monospace"));
         let grey = gdk::RGBA { red: 0f32, green: 0f32, blue: 0.3f32, alpha: 0.05f32 };
-        tag_mono.set_property_background_rgba(Some(&grey));
+        tag_mono.set_background_rgba(Some(&grey));
 
         let tag_code = TextTagTable::create_tag(Tag::CODE, &table);
-        tag_code.set_property_family(Some("Monospace"));
-        tag_code.set_property_paragraph_background_rgba(Some(&grey));
-        tag_code.set_property_left_margin(30);
-        tag_code.set_property_right_margin(30);
-        tag_code.set_property_indent(2);
+        tag_code.set_family(Some("Monospace"));
+        tag_code.set_paragraph_background_rgba(Some(&grey));
+        tag_code.set_left_margin(30);
+        tag_code.set_right_margin(30);
+        tag_code.set_indent(2);
 
         let tag_strike = TextTagTable::create_tag(Tag::STRIKE, &table);
-        tag_strike.set_property_strikethrough(true);
+        tag_strike.set_strikethrough(true);
 
         let tag_red = TextTagTable::create_tag(Tag::RED, &table);
         let red = gdk::RGBA { red: 1f32, green: 0f32, blue: 0f32, alpha: 0.4f32 };
-        tag_red.set_property_background_rgba(Some(&red));
+        tag_red.set_background_rgba(Some(&red));
 
         let tag_green = TextTagTable::create_tag(Tag::GREEN, &table);
         let green = gdk::RGBA { red: 0f32, green: 1f32, blue: 0f32, alpha: 0.4f32 };
-        tag_green.set_property_background_rgba(Some(&green));
+        tag_green.set_background_rgba(Some(&green));
 
         let tag_blue = TextTagTable::create_tag(Tag::BLUE, &table);
         let blue = gdk::RGBA { red: 0f32, green: 0.5f32, blue: 1f32, alpha: 0.6f32 };
-        tag_blue.set_property_background_rgba(Some(&blue));
+        tag_blue.set_background_rgba(Some(&blue));
 
         let tag_yellow = TextTagTable::create_tag(Tag::YELLOW, &table);
         let yellow = gdk::RGBA { red: 1f32, green: 1f32, blue: 0f32, alpha: 0.6f32 };
-        tag_yellow.set_property_background_rgba(Some(&yellow));
+        tag_yellow.set_background_rgba(Some(&yellow));
 
         let tag_search = TextTagTable::create_tag(Tag::SEARCH, &table);
         let highlight = gdk::RGBA { red: 1f32, green: 0f32, blue: 1f32, alpha: 0.4f32 };
-        tag_search.set_property_background_rgba(Some(&highlight));
+        tag_search.set_background_rgba(Some(&highlight));
 
         let _tag_rule = TextTagTable::create_tag(Tag::RULE, &table);
 
@@ -130,7 +130,7 @@ impl TextTagTable {
         tag
     }
 
-    pub fn get_tag_table(&self) -> &gtk::TextTagTable {
+    pub fn tag_table(&self) -> &gtk::TextTagTable {
         &self.table
     }
 

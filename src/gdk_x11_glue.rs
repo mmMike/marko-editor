@@ -21,9 +21,9 @@ pub trait WindowGeometry {
 
 impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
     fn get_window_geometry(&self) -> Option<gdk::Rectangle> {
-        let surface = self.get_surface()?;
+        let surface = self.surface()?;
         let xs = surface.clone().downcast::<X11Surface>().ok()?;
-        let xd = surface.get_display()?.downcast::<X11Display>().ok()?;
+        let xd = surface.display()?.downcast::<X11Display>().ok()?;
         unsafe {
             let screen = x11::xlib::XDefaultRootWindow(xd.get_xdisplay());
             let mut _child: u64 = 0;
@@ -32,7 +32,7 @@ impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
 
             x11::xlib::XTranslateCoordinates(
                 xd.get_xdisplay(),
-                xs.get_xid(),
+                xs.xid(),
                 screen,
                 0,
                 0,
@@ -40,7 +40,7 @@ impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
                 &mut y,
                 &mut _child,
             );
-            let (width, height) = self.get_default_size();
+            let (width, height) = self.default_size();
             Some(gdk::Rectangle { x, y, width, height })
         }
     }
@@ -49,9 +49,9 @@ impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
         fn get<W: IsA<gtk::Window> + IsA<gtk::Native>>(
             window: &W,
         ) -> Option<(X11Surface, X11Display)> {
-            let surface = window.get_surface()?;
+            let surface = window.surface()?;
             let xs = surface.clone().downcast::<X11Surface>().ok()?;
-            let xd = surface.get_display()?.downcast::<X11Display>().ok()?;
+            let xd = surface.display()?.downcast::<X11Display>().ok()?;
             Some((xs, xd))
         }
         self.set_default_size(rect.width, rect.height);
@@ -71,14 +71,14 @@ impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
                 let mask = 3;
                 // _res is always 1, even if the window is not moved to x, y
                 let _res =
-                    x11::xlib::XConfigureWindow(xd.get_xdisplay(), xs.get_xid(), mask, &mut hints);
+                    x11::xlib::XConfigureWindow(xd.get_xdisplay(), xs.xid(), mask, &mut hints);
             }
         }
     }
 
     fn get_window_screen(&self) -> Option<gdk::Rectangle> {
-        let surface = self.get_surface()?;
-        let xd = surface.get_display()?.downcast::<X11Display>().ok()?;
+        let surface = self.surface()?;
+        let xd = surface.display()?.downcast::<X11Display>().ok()?;
         unsafe {
             let screen = x11::xlib::XDefaultRootWindow(xd.get_xdisplay());
             let mut _root: u64 = 0;

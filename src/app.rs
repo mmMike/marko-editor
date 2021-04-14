@@ -16,8 +16,7 @@ impl App {
         let app = gtk::Application::new(
             Some(APP_ID),
             gtk::gio::ApplicationFlags::HANDLES_OPEN | gtk::gio::ApplicationFlags::NON_UNIQUE,
-        )
-        .expect("Initialization failed...");
+        );
 
         app.connect_activate(|app| {
             let w = App::create_window(app);
@@ -32,7 +31,7 @@ impl App {
     fn open(app: &gtk::Application, files: &[gtk::gio::File], _hint: &str) {
         let window = App::create_window(app);
         // ToDo: handle multiple files
-        window.enqueue_file(files[0].get_path().unwrap());
+        window.enqueue_file(files[0].path().unwrap());
         window.prepare_show();
         window.show();
     }
@@ -44,6 +43,6 @@ impl App {
     }
 
     pub fn run(&self, argv: &[String]) -> i32 {
-        self.app.run(argv)
+        self.app.run_with_args(argv)
     }
 }

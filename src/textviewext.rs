@@ -18,13 +18,13 @@ impl TextViewExt2 for gtk::TextView {
 
     fn get_image_at_location(&self, x: f64, y: f64) -> Option<String> {
         let iter = self.get_iter_at_coord(x, y)?;
-        let (name, _tag) = self.get_buffer().get_image_at_iter(&iter)?;
+        let (name, _tag) = self.buffer().get_image_at_iter(&iter)?;
         Some(name)
     }
 
     fn get_link_at_location(&self, x: f64, y: f64) -> Option<String> {
         let iter = self.get_iter_at_coord(x, y)?;
-        let (name, _tag) = self.get_buffer().get_link_at_iter(&iter)?;
+        let (name, _tag) = self.buffer().get_link_at_iter(&iter)?;
         Some(name)
     }
 

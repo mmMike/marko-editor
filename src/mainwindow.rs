@@ -131,7 +131,7 @@ impl MainWindow {
         this.ui.outline_view.connect_row_activated({
             let t = this.ui.text_view.clone();
             move |s, path, _col| {
-                let model = s.get_model().unwrap();
+                let model = s.model().unwrap();
                 if let Some(iter) = model.get_iter(path) {
                     let line = model.get(&iter, 1).get::<i32>().unwrap().unwrap();
                     t.scroll_to(line);
@@ -189,27 +189,27 @@ impl MainWindow {
             provider: &P,
             priority: u32,
         ) {
-            widget.get_style_context().add_provider(provider, priority);
+            widget.style_context().add_provider(provider, priority);
 
-            let mut child = widget.get_first_child();
+            let mut child = widget.first_child();
             while let Some(c) = &child {
                 apply_css(c, provider, priority);
-                child = c.get_next_sibling();
+                child = c.next_sibling();
             }
         }
         apply_css(&self.ui.window, &css, u32::max_value());
 
         // the combobox should look like a button, since it contains one we style it like the others
         fn css_combo_to_flat<W: IsA<gtk::Widget>>(widget: &W) {
-            if widget.get_css_classes().contains(&glib::GString::from("combo")) {
+            if widget.css_classes().contains(&glib::GString::from("combo")) {
                 widget.remove_css_class("combo");
                 widget.add_css_class("flat");
             }
 
-            let mut child = widget.get_first_child();
+            let mut child = widget.first_child();
             while let Some(c) = &child {
                 css_combo_to_flat(c);
-                child = c.get_next_sibling();
+                child = c.next_sibling();
             }
         }
         css_combo_to_flat(&self.ui.outline_widget);
@@ -297,8 +297,8 @@ impl MainWindow {
             move |dlg: &FileChooserDialog, response: ResponseType| {
                 s.settings.store_geometry(dlg, "file_dlg_geometry");
                 if response == ResponseType::Ok {
-                    let file = dlg.get_file().expect("Couldn't get file");
-                    s.open_file(&file.get_path().expect("Couldn't get file path"));
+                    let file = dlg.file().expect("Couldn't get file");
+                    s.open_file(&file.path().expect("Couldn't get file path"));
                 }
                 dlg.close();
             }
@@ -346,8 +346,8 @@ impl MainWindow {
             move |dlg: &FileChooserDialog, response: ResponseType| {
                 s.settings.store_geometry(dlg, "file_dlg_geometry");
                 if response == ResponseType::Ok {
-                    if let Some(file) = dlg.get_file() {
-                        let filename = file.get_path().expect("Couldn't get file path");
+                    if let Some(file) = dlg.file() {
+                        let filename = file.path().expect("Couldn't get file path");
                         if s.write_file(&filename).is_ok() {
                             s.set_filename(&filename);
                             and_then(&s);
@@ -375,7 +375,7 @@ impl MainWindow {
     }
 
     fn close_file<F: Fn(&Self) + 'static>(&self, and_then: Rc<F>) {
-        if !self.ui.text_view.get_modified() {
+        if !self.ui.text_view.modified() {
             and_then(self);
             return;
         }
@@ -466,14 +466,14 @@ impl MainWindow {
         self.settings.store_geometry_property(
             &self.ui.window,
             "outline_splitter",
-            self.ui.outline_splitter.get_position().to_string().as_str(),
+            self.ui.outline_splitter.position().to_string().as_str(),
         );
         self.settings.store_geometry_property(
             &self.ui.window,
             "outline_visible",
             self.ui.outline_widget.get_visible().to_string().as_str(),
         );
-        let level = self.ui.outline_maxlevel.get_active().unwrap().to_string();
+        let level = self.ui.outline_maxlevel.active().unwrap().to_string();
         let _ = self.settings.store("config", "outline_maxlevel", level.as_str());
     }
 
@@ -501,7 +501,7 @@ impl MainWindow {
     }
 
     fn close(&self) {
-        self.close_file(Rc::new(|s: &MainWindow| s.ui.window.get_application().unwrap().quit()));
+        self.close_file(Rc::new(|s: &MainWindow| s.ui.window.application().unwrap().quit()));
     }
 
     fn close_response(&self) -> gtk::glib::signal::Inhibit {
@@ -517,7 +517,7 @@ impl MainWindow {
 
     fn setup_md_dialog(&self, b: &gtk::Builder) {
         self.ui.dlg_md.set_hide_on_close(true);
-        self.ui.dlg_md.get_style_context().add_provider(&self.css, u32::max_value());
+        self.ui.dlg_md.style_context().add_provider(&self.css, u32::max_value());
 
         let textview_md: gtk::TextView = builder_get!(b("textview_md"));
 
@@ -529,8 +529,8 @@ impl MainWindow {
             let s = self.clone();
             let t = textview_md.clone();
             move |_| {
-                let buffer = t.get_buffer();
-                let text = buffer.get_text(&buffer.get_start_iter(), &buffer.get_end_iter(), false);
+                let buffer = t.buffer();
+                let text = buffer.get_text(&buffer.start_iter(), &buffer.end_iter(), false);
                 s.ui.text_view.insert_markdown(text.as_str(), false);
             }
         });
@@ -542,8 +542,8 @@ impl MainWindow {
             let s = self.clone();
             let t = textview_md.clone();
             move |_| {
-                let buffer = t.get_buffer();
-                let text = buffer.get_text(&buffer.get_start_iter(), &buffer.get_end_iter(), false);
+                let buffer = t.buffer();
+                let text = buffer.get_text(&buffer.start_iter(), &buffer.end_iter(), false);
                 s.ui.text_view.insert_markdown(text.as_str(), true);
                 d.hide();
             }
@@ -555,18 +555,18 @@ impl MainWindow {
             let t = textview_md;
             move |_| {
                 let text = s.ui.text_view.to_markdown();
-                let buffer = t.get_buffer();
-                buffer.get_text(&buffer.get_start_iter(), &buffer.get_end_iter(), false);
-                buffer.delete(&mut buffer.get_start_iter(), &mut buffer.get_end_iter());
-                buffer.insert(&mut buffer.get_start_iter(), text.as_str());
+                let buffer = t.buffer();
+                buffer.get_text(&buffer.start_iter(), &buffer.end_iter(), false);
+                buffer.delete(&mut buffer.start_iter(), &mut buffer.end_iter());
+                buffer.insert(&mut buffer.start_iter(), text.as_str());
             }
         });
     }
 
     fn act_markdown_dlg(&self) {
         if let Some(geometry) = self.ui.window.get_window_geometry() {
-            self.ui.dlg_md.set_property_default_height(geometry.height - 80);
-            self.ui.dlg_md.set_property_default_width(geometry.width - 60);
+            self.ui.dlg_md.set_default_height(geometry.height - 80);
+            self.ui.dlg_md.set_default_width(geometry.width - 60);
         }
         self.ui.dlg_md.show();
     }
@@ -613,7 +613,7 @@ impl MainWindow {
             i += 1;
         }
 
-        let menu_model = self.ui.btn_open_menu.get_menu_model().unwrap();
+        let menu_model = self.ui.btn_open_menu.menu_model().unwrap();
         if let Ok(menu) = menu_model.downcast::<gtk::gio::Menu>() {
             menu.remove(2);
             let bookmarks = gtk::gio::Menu::new();
@@ -635,16 +635,16 @@ impl MainWindow {
     }
 
     fn update_outline(&self) {
-        let level = self.ui.outline_maxlevel.get_active().unwrap() + 1;
+        let level = self.ui.outline_maxlevel.active().unwrap() + 1;
         self.ui.outline_view.set_model(Some(&self.ui.text_view.get_outline_model(level)));
     }
 
     fn toggle_dark_theme(&self) {
         if let Some(settings) = gtk::Settings::get_default() {
-            settings.set_property_gtk_theme_name(Some("Adwaita"));
+            settings.set_gtk_theme_name(Some("Adwaita"));
 
-            let current = settings.get_property_gtk_application_prefer_dark_theme();
-            settings.set_property_gtk_application_prefer_dark_theme(!current);
+            let current = settings.is_gtk_application_prefer_dark_theme();
+            settings.set_gtk_application_prefer_dark_theme(!current);
             self.ui.text_view.update_colors(!current);
             self.update_outline();
         }

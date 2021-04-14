@@ -46,7 +46,7 @@ impl GetColor for gtk::StyleContext {
             gtk::render_line(&ctx, &c, 0f64, 0f64, 1f64, 1f64);
         }
         drop(c);
-        let data = s.get_data().unwrap();
+        let data = s.data().unwrap();
         let slice = &data[0..4];
 
         let transform = |input: f32| -> f32 {

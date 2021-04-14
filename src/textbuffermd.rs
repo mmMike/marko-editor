@@ -31,7 +31,7 @@ pub trait TextBufferMd {
 impl TextBufferMd for gtk::TextBuffer {
     fn to_markdown(&self) -> String {
         // add newline at end if needed
-        let mut end = self.get_end_iter();
+        let mut end = self.end_iter();
         let mut start = end.clone();
         if start.backward_char() && self.get_text(&start, &end, false).ne(NEWLINE) {
             self.insert(&mut end, NEWLINE);
@@ -53,8 +53,8 @@ impl TextBufferMd for gtk::TextBuffer {
         let mut formatted = true;
         let mut is_start_of_line = true; // after newlines and possible white space
 
-        let mut it = self.get_start_iter();
-        let mut c = it.get_char();
+        let mut it = self.start_iter();
+        let mut c = it.char();
         while c != char::from(0) {
             // newline handling
             if c == NEWLINE_CHAR {
@@ -65,7 +65,7 @@ impl TextBufferMd for gtk::TextBuffer {
                     }
                     s += BREAK;
                     it.forward_char();
-                    c = it.get_char();
+                    c = it.char();
                     continue;
                 }
             } else {
@@ -206,7 +206,7 @@ impl TextBufferMd for gtk::TextBuffer {
             is_start_of_line = is_start_of_line && c.is_whitespace();
 
             it.forward_char();
-            c = it.get_char();
+            c = it.char();
         }
 
         // close all open tags
@@ -232,7 +232,7 @@ impl TextBufferMd for gtk::TextBuffer {
     }
 
     fn insert_markdown(&self, iter: &mut gtk::TextIter, markdown: &str) {
-        let pos_start = iter.get_offset();
+        let pos_start = iter.offset();
 
         let mut options = Options::empty();
         options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -254,7 +254,7 @@ impl TextBufferMd for gtk::TextBuffer {
             //println!("\nEvent:{:?}", &event);
             match event {
                 Event::Start(tag) => match tag {
-                    CTag::Heading(_) => pos_heading = iter.get_offset(),
+                    CTag::Heading(_) => pos_heading = iter.offset(),
                     CTag::Paragraph => {
                         if !iter.starts_line() && (list_ident == 0 || !list_item_empty) {
                             self.insert(iter, NEWLINE);
@@ -264,8 +264,8 @@ impl TextBufferMd for gtk::TextBuffer {
                             self.insert(iter, "    ".repeat(list_ident).as_str());
                         }
                     }
-                    CTag::Image(..) => pos_image = iter.get_offset(),
-                    CTag::Link(..) => pos_link = iter.get_offset(),
+                    CTag::Image(..) => pos_image = iter.offset(),
+                    CTag::Link(..) => pos_link = iter.offset(),
                     CTag::List(number) => {
                         list_number.push(number);
                         // a sublist comes before the end tag
@@ -292,13 +292,13 @@ impl TextBufferMd for gtk::TextBuffer {
                             .as_str(),
                         )
                     }
-                    CTag::Strong => pos_bold = iter.get_offset(),
-                    CTag::Emphasis => pos_italic = iter.get_offset(),
+                    CTag::Strong => pos_bold = iter.offset(),
+                    CTag::Emphasis => pos_italic = iter.offset(),
                     CTag::CodeBlock(kind) => match kind {
-                        CodeBlockKind::Indented => pos_mono = iter.get_offset(),
-                        CodeBlockKind::Fenced(_) => pos_mono = iter.get_offset(),
+                        CodeBlockKind::Indented => pos_mono = iter.offset(),
+                        CodeBlockKind::Fenced(_) => pos_mono = iter.offset(),
                     },
-                    CTag::Strikethrough => pos_strike = iter.get_offset(),
+                    CTag::Strikethrough => pos_strike = iter.offset(),
                     _ => {} //println!("\nStart tag: {:?}", &tag),
                 },
                 Event::End(tag) => match tag {
@@ -354,7 +354,7 @@ impl TextBufferMd for gtk::TextBuffer {
                     list_item_empty = false;
                 }
                 Event::Code(text) => {
-                    pos_mono = iter.get_offset();
+                    pos_mono = iter.offset();
                     self.insert(iter, text.as_ref());
                     self.apply_tag_offset(iter, Tag::MONO, pos_mono);
                 }
@@ -370,7 +370,7 @@ impl TextBufferMd for gtk::TextBuffer {
                 // Event::SoftBreak => self.insert(iter, NEWLINE),
                 Event::HardBreak => self.insert(iter, NEWLINE),
                 Event::Rule => {
-                    let pos_rule = iter.get_offset();
+                    let pos_rule = iter.offset();
                     self.insert(iter, format!("{}{}", Tag::MD_RULE, NEWLINE).as_str());
                     self.apply_tag_offset(iter, Tag::RULE, pos_rule);
                 }
@@ -400,28 +400,28 @@ impl TextBufferMd for gtk::TextBuffer {
     }
 
     fn assign_markup(&self, markup: &str) -> &gtk::TextBuffer {
-        self.delete(&mut self.get_start_iter(), &mut self.get_end_iter());
-        self.insert_markup(&mut self.get_start_iter(), markup);
+        self.delete(&mut self.start_iter(), &mut self.end_iter());
+        self.insert_markup(&mut self.start_iter(), markup);
         self
     }
 
     fn assign_markdown(&self, markdown: &str, buffer_is_modified: bool) -> &gtk::TextBuffer {
-        self.delete(&mut self.get_start_iter(), &mut self.get_end_iter());
-        self.insert_markdown(&mut self.get_start_iter(), markdown);
+        self.delete(&mut self.start_iter(), &mut self.end_iter());
+        self.insert_markdown(&mut self.start_iter(), markdown);
         self.set_modified(buffer_is_modified);
         self
     }
 
     fn apply_tag_offset(&self, iter: &mut gtk::TextIter, tag_name: &str, start_offset: i32) {
         let mut start = iter.clone();
-        start.backward_chars(iter.get_offset() - start_offset);
+        start.backward_chars(iter.offset() - start_offset);
         // formatting should not be applied to the last newline (if present)
         if iter.starts_line() {
             let mut end = iter.clone();
             end.backward_char();
-            self.apply_tag(&self.get_tag_table().lookup(tag_name).unwrap(), &start, &end);
+            self.apply_tag(&self.tag_table().lookup(tag_name).unwrap(), &start, &end);
         } else {
-            self.apply_tag(&self.get_tag_table().lookup(tag_name).unwrap(), &start, &iter);
+            self.apply_tag(&self.tag_table().lookup(tag_name).unwrap(), &start, &iter);
         }
     }
 
@@ -433,7 +433,7 @@ impl TextBufferMd for gtk::TextBuffer {
         start_offset: i32,
     ) {
         let mut start = iter.clone();
-        start.backward_chars(iter.get_offset() - start_offset);
+        start.backward_chars(iter.offset() - start_offset);
         let tag = if title.is_empty() {
             self.create_image_tag(image)
         } else {
@@ -452,8 +452,8 @@ impl TextBufferMd for gtk::TextBuffer {
                 None,
             )
         {
-            let offset_sts = start_tag_start.get_offset();
-            let offset_ste = start_tag_end.get_offset();
+            let offset_sts = start_tag_start.offset();
+            let offset_ste = start_tag_end.offset();
 
             if let Some((mut end_tag_start, mut end_tag_end)) = start_tag_end.forward_search(
                 TextTagTable::md_end_tag(tag).unwrap(),
@@ -461,11 +461,11 @@ impl TextBufferMd for gtk::TextBuffer {
                 None,
             ) {
                 self.apply_tag(
-                    &self.get_tag_table().lookup(tag).unwrap(),
+                    &self.tag_table().lookup(tag).unwrap(),
                     &start_tag_end,
                     &end_tag_start,
                 );
-                offset = end_tag_start.get_offset() - 6; // length of two tags, which get removed
+                offset = end_tag_start.offset() - 6; // length of two tags, which get removed
                 self.delete(&mut end_tag_start, &mut end_tag_end);
                 end_tag_start.set_offset(offset_sts);
                 end_tag_end.set_offset(offset_ste);
@@ -493,7 +493,7 @@ mod tests {
     fn buffer_new() -> gtk::TextBuffer {
         let _ = gtk::init();
         let table = TextTagTable::new();
-        let buffer = gtk::TextBuffer::new(Some(table.get_tag_table()));
+        let buffer = gtk::TextBuffer::new(Some(table.tag_table()));
         //buffer.connect_apply_tag(cb);
         buffer
     }

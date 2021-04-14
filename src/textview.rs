@@ -147,13 +147,13 @@ impl LinkEdit {
         let link_data = LinkData {
             text: self
                 .edt_link_name
-                .get_text()
+                .text()
                 .as_str()
                 .split_whitespace()
                 .collect::<Vec<&str>>()
                 .join(" "),
-            link: String::from(self.edt_link_target.get_text().as_str().trim()),
-            is_image: self.btn_is_image.get_active(),
+            link: String::from(self.edt_link_target.text().as_str().trim()),
+            is_image: self.btn_is_image.is_active(),
         };
         (self.accept_link_cb.borrow())(Some(&link_data));
     }
@@ -168,11 +168,11 @@ impl LinkEdit {
     }
 
     fn fetch_title(&self) {
-        fetch_title(self.edt_link_target.get_text().as_str(), {
+        fetch_title(self.edt_link_target.text().as_str(), {
             let s = self.clone();
             move |decoded| {
                 s.edt_link_name.set_text(decoded);
-                if s.link_edit_bar.get_search_mode() {
+                if s.link_edit_bar.is_search_mode() {
                     s.edt_link_name.grab_focus();
                 }
             }
@@ -213,7 +213,7 @@ impl SearchBar {
     }
 
     pub fn is_open(&self) -> bool {
-        self.search_bar.get_search_mode()
+        self.search_bar.is_search_mode()
     }
     pub fn hide(&self) {
         self.search_bar.set_search_mode(false);
@@ -226,21 +226,21 @@ impl SearchBar {
     fn on_enabled(&self) {
         if !self.is_open() {
             self.clear_highlight();
-            self.search_bar.get_key_capture_widget().grab_focus();
+            self.search_bar.key_capture_widget().grab_focus();
             self.search_bar.set_key_capture_widget::<gtk::Widget>(None);
         }
     }
 
     fn on_next_match(&self, backward: bool) {
-        let buffer = self.get_buffer();
-        let text = String::from(self.edt_search.get_text().as_str().trim());
+        let buffer = self.buffer();
+        let text = String::from(self.edt_search.text().as_str().trim());
         if text.is_empty() {
             return;
         }
 
         let mut cursor = buffer.get_insert_iter();
-        // get_selection_bounds retrieves the iterators in order
-        if let Some((start, end)) = buffer.get_selection_bounds() {
+        // selection_bounds retrieves the iterators in order
+        if let Some((start, end)) = buffer.selection_bounds() {
             if backward {
                 cursor = start;
             } else {
@@ -260,9 +260,9 @@ impl SearchBar {
                 return;
             } else if wrap_around {
                 if backward {
-                    cursor = buffer.get_end_iter();
+                    cursor = buffer.end_iter();
                 } else {
-                    cursor = buffer.get_start_iter();
+                    cursor = buffer.start_iter();
                 }
                 wrap_around = false;
                 continue;
@@ -275,9 +275,9 @@ impl SearchBar {
     fn on_search_changed(&self) {
         self.clear_highlight();
 
-        let buffer = self.get_buffer();
-        let tag = buffer.get_tag_table().lookup(Tag::SEARCH).unwrap();
-        let text = String::from(self.edt_search.get_text().as_str().trim());
+        let buffer = self.buffer();
+        let tag = buffer.tag_table().lookup(Tag::SEARCH).unwrap();
+        let text = String::from(self.edt_search.text().as_str().trim());
         if text.is_empty() {
             return;
         }
@@ -298,7 +298,7 @@ impl SearchBar {
         }
 
         // highlight all
-        let mut iter = buffer.get_start_iter();
+        let mut iter = buffer.start_iter();
         while let Some((start, end)) =
             iter.forward_search(text.as_str(), gtk::TextSearchFlags::CASE_INSENSITIVE, None)
         {
@@ -308,13 +308,13 @@ impl SearchBar {
     }
 
     fn clear_highlight(&self) {
-        let buffer = self.get_buffer();
-        let (start, end) = buffer.get_bounds();
+        let buffer = self.buffer();
+        let (start, end) = buffer.bounds();
         buffer.remove_tag_by_name(Tag::SEARCH, &start, &end);
     }
 
-    fn get_buffer(&self) -> gtk::TextBuffer {
-        (self.access_view_cb)().get_buffer()
+    fn buffer(&self) -> gtk::TextBuffer {
+        (self.access_view_cb)().buffer()
     }
 }
 
@@ -401,8 +401,8 @@ impl TextView {
 
         let activate_link_cb: OpenLinkCb = Rc::new(RefCell::new(Box::new(|_: &str| {})));
 
-        let link_start = buffer.create_mark(None, &buffer.get_start_iter(), true);
-        let link_end = buffer.create_mark(None, &buffer.get_start_iter(), false);
+        let link_start = buffer.create_mark(None, &buffer.start_iter(), true);
+        let link_end = buffer.create_mark(None, &buffer.start_iter(), false);
 
         let this = Self {
             buffer,
@@ -447,8 +447,8 @@ impl TextView {
         &self.top_level
     }
 
-    pub fn get_modified(&self) -> bool {
-        self.buffer.get_modified()
+    pub fn modified(&self) -> bool {
+        self.buffer.is_modified()
     }
 
     pub fn set_not_modified(&self) {
@@ -464,14 +464,14 @@ impl TextView {
     }
 
     pub fn scroll_to(&self, line: i32) {
-        if let Some(mut iter) = self.textview.get_buffer().get_iter_at_line(line) {
+        if let Some(mut iter) = self.textview.buffer().get_iter_at_line(line) {
             self.textview.scroll_to_iter(&mut iter, 0.05, true, 0., 0.1);
         }
     }
 
     pub fn scroll_to_top_bottom(&self, to_top: bool) {
-        let line = if to_top { 0 } else { self.textview.get_buffer().get_line_count() - 1 };
-        if let Some(mut iter) = self.textview.get_buffer().get_iter_at_line(line) {
+        let line = if to_top { 0 } else { self.textview.buffer().line_count() - 1 };
+        if let Some(mut iter) = self.textview.buffer().get_iter_at_line(line) {
             self.textview.scroll_to_iter(&mut iter, 0.05, true, 0., 0.1);
         }
     }
@@ -600,9 +600,9 @@ impl TextView {
         gesture.connect_pressed({
             let this = self.clone();
             move |gesture, n_press, x, y| {
-                if this.buffer.get_has_selection()
+                if this.buffer.has_selection()
                     || n_press < 2
-                    || gesture.clone().upcast::<gtk::GestureSingle>().get_button() > 1
+                    || gesture.clone().upcast::<gtk::GestureSingle>().button() > 1
                 {
                     return;
                 }
@@ -627,7 +627,7 @@ impl TextView {
 
                     let bytes = glib::Bytes::from(link.as_bytes());
                     // https://www.iana.org/assignments/media-types/text/uri-list
-                    let content = gdk::ContentProvider::new_for_bytes("text/uri-list", &bytes);
+                    let content = gdk::ContentProvider::for_bytes("text/uri-list", &bytes);
                     return Some(content);
                 }
                 drag_source.drag_cancel();
@@ -642,11 +642,11 @@ impl TextView {
         let mime_moz: &str = "text/x-moz-url";
 
         let handler = gtk::DropTarget::new(glib::Type::STRING, gdk::DragAction::COPY);
-        handler.set_gtypes(&[glib::Type::STRING, gtk::gio::File::static_type()]);
+        handler.set_types(&[glib::Type::STRING, gtk::gio::File::static_type()]);
 
         handler.connect_accept({
             move |_target, drop| {
-                if let Some(f) = drop.get_formats() {
+                if let Some(f) = drop.formats() {
                     return f.contain_mime_type(&mime_moz) || f.contain_mime_type(&mime_uri);
                 }
                 false
@@ -671,7 +671,7 @@ impl TextView {
         let (_, by) =
             self.textview.window_to_buffer_coords(gtk::TextWindowType::Text, x as i32, y as i32);
         let line_start = self.textview.get_line_at_y(by).0;
-        let buffer = self.textview.get_buffer();
+        let buffer = self.textview.buffer();
         let mut line_end = line_start.clone();
         if !line_end.ends_line() {
             line_end.forward_to_line_end();
@@ -681,7 +681,7 @@ impl TextView {
         if !text.is_empty() {
             buffer.insert(&mut line_end, NEWLINE);
         }
-        let link_offset = line_end.get_offset();
+        let link_offset = line_end.offset();
         let link = link.trim();
         if is_file(link) {
             buffer.insert(&mut line_end, &get_file_name(link));
@@ -699,7 +699,7 @@ impl TextView {
         }
 
         let mut start = self.buffer.get_insert_iter();
-        start.set_line(start.get_line());
+        start.set_line(start.line());
         let mut end = start.clone();
         // ToDo: this might be a problem for empty lines
         end.forward_to_line_end();
@@ -724,14 +724,14 @@ impl TextView {
 
         let toggle_tag = |start: &gtk::TextIter, end: &gtk::TextIter| {
             // ToDo: handle multiline formatting
-            let tag = b.get_tag_table().lookup(tag_str).unwrap();
+            let tag = b.tag_table().lookup(tag_str).unwrap();
             b.begin_user_action();
             if start.has_tag(&tag) {
                 b.remove_tag(&tag, &start, &end);
             } else {
                 if COLORS.contains(&format) {
                     for c in &COLORS {
-                        let tag = b.get_tag_table().lookup(Tag::from_char_format(&c)).unwrap();
+                        let tag = b.tag_table().lookup(Tag::from_char_format(&c)).unwrap();
                         b.remove_tag(&tag, &start, &end);
                     }
                 }
@@ -741,7 +741,7 @@ impl TextView {
             b.end_user_action();
         };
 
-        if let Some((start, mut end)) = b.get_selection_bounds() {
+        if let Some((start, mut end)) = b.selection_bounds() {
             if end.starts_line() {
                 end.backward_char();
             }
@@ -763,9 +763,9 @@ impl TextView {
         }
         let clear = |start: &gtk::TextIter, end: &gtk::TextIter| {
             // Remove overlapping paragraph tags on the whole paragraph
-            for line in start.get_line()..end.get_line() + 1 {
+            for line in start.line()..end.line() + 1 {
                 if let Some(line_iter) = self.buffer.get_iter_at_line(line) {
-                    for tag in line_iter.get_tags() {
+                    for tag in line_iter.tags() {
                         if tag.get_par_format().is_some() {
                             let mut line_end = line_iter.clone();
                             line_end.forward_to_line_end();
@@ -779,7 +779,7 @@ impl TextView {
             self.buffer.remove_all_tags(&start, &end);
         };
 
-        if let Some((start, end)) = self.buffer.get_selection_bounds() {
+        if let Some((start, end)) = self.buffer.selection_bounds() {
             clear(&start, &end);
         } else if let Some((start, end)) = self.buffer.get_current_word_bounds() {
             clear(&start, &end);
@@ -793,7 +793,7 @@ impl TextView {
 
             let mut start = buffer.get_iter_at_mark(&self.link_start);
             let mut end = buffer.get_iter_at_mark(&self.link_end);
-            let tags = start.get_tags();
+            let tags = start.tags();
             buffer.delete(&mut start, &mut end);
             buffer.insert(&mut end, &data.text);
             start = buffer.get_iter_at_mark(&self.link_start);
@@ -839,20 +839,20 @@ impl TextView {
                 end.forward_to_tag_toggle(Some(&tag));
             }
             is_image = true;
-        } else if let Some((s, e)) = self.buffer.get_selection_bounds() {
+        } else if let Some((s, e)) = self.buffer.selection_bounds() {
             start = s;
             end = e;
         } else {
             // select current non-whitespace clock, to capture complete links
             while start.backward_char() {
-                if start.get_char().is_whitespace() {
+                if start.char().is_whitespace() {
                     start.forward_char();
                     break;
                 }
             }
-            if !end.get_char().is_whitespace() {
+            if !end.char().is_whitespace() {
                 while end.forward_char() {
-                    if end.get_char().is_whitespace() {
+                    if end.char().is_whitespace() {
                         break;
                     }
                 }
@@ -913,7 +913,7 @@ impl TextView {
         self.buffer.begin_irreversible_action();
         self.buffer.assign_markdown(markdown, false);
         self.buffer.end_irreversible_action();
-        self.buffer.place_cursor(&self.buffer.get_start_iter());
+        self.buffer.place_cursor(&self.buffer.start_iter());
     }
 
     fn dump(&self) {
@@ -927,7 +927,7 @@ impl TextView {
         let markdown = self.to_markdown();
         self.buffer.assign_markdown(&markdown, true);
         self.buffer.end_irreversible_action();
-        self.buffer.place_cursor(&self.buffer.get_start_iter());
+        self.buffer.place_cursor(&self.buffer.start_iter());
     }
 
     fn insert_tab(&self) {
@@ -935,7 +935,7 @@ impl TextView {
             return;
         }
         let mut cursor = self.buffer.get_insert_iter();
-        let remainder = cursor.get_line_offset() % TAB_WIDTH;
+        let remainder = cursor.line_offset() % TAB_WIDTH;
         self.buffer.insert(&mut cursor, &" ".repeat((4 - remainder) as usize));
     }
 
@@ -945,11 +945,11 @@ impl TextView {
         }
         let mut cursor = self.buffer.get_insert_iter();
         if !cursor.starts_line() {
-            cursor.set_line(cursor.get_line());
+            cursor.set_line(cursor.line());
         }
         for _ in 0..TAB_WIDTH {
             // ToDo: maybe other whitespace types should be considered
-            if cursor.get_char() == ' ' {
+            if cursor.char() == ' ' {
                 let mut end = cursor.clone();
                 end.forward_char();
                 self.buffer.delete(&mut cursor, &mut end);
@@ -975,7 +975,7 @@ impl TextView {
             gdk::RGBA::static_type(),
         ]);
 
-        let mut line_iter = self.buffer.get_start_iter();
+        let mut line_iter = self.buffer.start_iter();
         let mut line = 0;
         // let start = Instant::now();
         loop {
@@ -987,23 +987,28 @@ impl TextView {
                             line_end.forward_to_line_end();
                             model.set(
                                 &model.append(),
-                                &[0, 1, 2],
                                 &[
-                                    &format!(
-                                        "{}{}",
-                                        "  ".repeat((level - 1) as usize),
-                                        self.buffer.get_text(&line_iter, &line_end, false)
+                                    (
+                                        0,
+                                        &format!(
+                                            "{}{}",
+                                            "  ".repeat((level - 1) as usize),
+                                            self.buffer.get_text(&line_iter, &line_end, false)
+                                        ),
                                     ),
-                                    &line,
-                                    &match level {
-                                        1 => colors.outline_h1,
-                                        2 => colors.outline_h2,
-                                        3 => colors.outline_h3,
-                                        4 => colors.outline_h4,
-                                        5 => colors.outline_h5,
-                                        6 => colors.outline_h6,
-                                        _ => colors.outline_none,
-                                    },
+                                    (1, &line),
+                                    (
+                                        2,
+                                        &match level {
+                                            1 => colors.outline_h1,
+                                            2 => colors.outline_h2,
+                                            3 => colors.outline_h3,
+                                            4 => colors.outline_h4,
+                                            5 => colors.outline_h5,
+                                            6 => colors.outline_h6,
+                                            _ => colors.outline_none,
+                                        },
+                                    ),
                                 ],
                             );
                         }
@@ -1025,6 +1030,6 @@ impl TextView {
     }
 
     pub fn update_colors(&self, prefer_dark: bool) {
-        self.colors.borrow_mut().update(&self.textview.get_style_context(), prefer_dark);
+        self.colors.borrow_mut().update(&self.textview.style_context(), prefer_dark);
     }
 }

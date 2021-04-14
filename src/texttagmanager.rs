@@ -25,7 +25,7 @@ impl TextTagManager {
     }
 
     pub fn table(&self) -> &gtk::TextTagTable {
-        self.table.get_tag_table()
+        self.table.tag_table()
     }
 
     pub fn for_each_edit_tag<F>(&self, callback: F)
