@@ -793,6 +793,7 @@ impl TextView {
 
             let mut start = buffer.get_iter_at_mark(&self.link_start);
             let mut end = buffer.get_iter_at_mark(&self.link_end);
+            let tags = start.get_tags();
             buffer.delete(&mut start, &mut end);
             buffer.insert(&mut end, &data.text);
             start = buffer.get_iter_at_mark(&self.link_start);
@@ -803,6 +804,12 @@ impl TextView {
                 buffer.create_link_tag(&data.link)
             };
             buffer.apply_tag(&tag, &start, &end);
+
+            for tag in tags {
+                if tag.get_image().is_none() && tag.get_link().is_none() {
+                    buffer.apply_tag(&tag, &start, &end);
+                }
+            }
         }
     }
 
