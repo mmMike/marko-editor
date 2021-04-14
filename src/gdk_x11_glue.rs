@@ -1,17 +1,5 @@
-use gdk4_x11::glib::translate::ToGlibPtr;
-use gdk4_x11::{ffi, X11Display, X11Surface};
+use gdk4_x11::{X11Display, X11Surface};
 use gtk::prelude::*;
-use x11::xlib;
-
-pub trait X11DisplayExt {
-    fn get_xdisplay(&self) -> *mut xlib::Display;
-}
-
-impl X11DisplayExt for X11Display {
-    fn get_xdisplay(&self) -> *mut xlib::Display {
-        unsafe { ffi::gdk_x11_display_get_xdisplay(self.to_glib_none().0) }
-    }
-}
 
 pub trait WindowGeometry {
     fn get_window_geometry(&self) -> Option<gdk::Rectangle>;
@@ -25,13 +13,13 @@ impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
         let xs = surface.clone().downcast::<X11Surface>().ok()?;
         let xd = surface.display()?.downcast::<X11Display>().ok()?;
         unsafe {
-            let screen = x11::xlib::XDefaultRootWindow(xd.get_xdisplay());
+            let screen = x11::xlib::XDefaultRootWindow(xd.xdisplay());
             let mut _child: u64 = 0;
             let mut x: i32 = 0;
             let mut y: i32 = 0;
 
             x11::xlib::XTranslateCoordinates(
-                xd.get_xdisplay(),
+                xd.xdisplay(),
                 xs.xid(),
                 screen,
                 0,
@@ -70,8 +58,7 @@ impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
                 // See link above, 3 = (1 << 0) | (1 << 1);
                 let mask = 3;
                 // _res is always 1, even if the window is not moved to x, y
-                let _res =
-                    x11::xlib::XConfigureWindow(xd.get_xdisplay(), xs.xid(), mask, &mut hints);
+                let _res = x11::xlib::XConfigureWindow(xd.xdisplay(), xs.xid(), mask, &mut hints);
             }
         }
     }
@@ -80,7 +67,7 @@ impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
         let surface = self.surface()?;
         let xd = surface.display()?.downcast::<X11Display>().ok()?;
         unsafe {
-            let screen = x11::xlib::XDefaultRootWindow(xd.get_xdisplay());
+            let screen = x11::xlib::XDefaultRootWindow(xd.xdisplay());
             let mut _root: u64 = 0;
             let mut x: i32 = 0;
             let mut y: i32 = 0;
@@ -89,7 +76,7 @@ impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
             let mut _border: u32 = 0;
             let mut _depth: u32 = 0;
             x11::xlib::XGetGeometry(
-                xd.get_xdisplay(),
+                xd.xdisplay(),
                 screen,
                 &mut _root,
                 &mut x,
