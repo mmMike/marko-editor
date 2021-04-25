@@ -61,7 +61,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
 
     // Current word for cursor at start or in word, NOT at the end.
     fn get_current_word_bounds(&self) -> Option<(TextIter, TextIter)> {
-        let mut start = self.get_iter_at_mark(&self.get_insert());
+        let mut start = self.iter_at_mark(&self.get_insert());
         let mut end = start.clone();
         if start.starts_word() {
             end.forward_word_end();
@@ -75,7 +75,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
     }
 
     fn get_insert_iter(&self) -> TextIter {
-        self.get_iter_at_mark(&self.get_insert())
+        self.iter_at_mark(&self.get_insert())
     }
 
     fn create_image_tag(&self, link: &str) -> gtk::TextTag {
@@ -102,7 +102,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
             }
         }
         // the link should also be found with the cursor at the end of the tag
-        let tags = iter.get_toggled_tags(false);
+        let tags = iter.toggled_tags(false);
         for tag in tags {
             if let Some(image) = tag.get_image() {
                 return Some((image, tag));
@@ -149,7 +149,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
             }
         }
         // the link should also be found with the cursor at the end of the tag
-        let tags = iter.get_toggled_tags(false);
+        let tags = iter.toggled_tags(false);
         for tag in tags {
             if let Some(link) = tag.get_link() {
                 return Some((link, tag));
@@ -246,14 +246,14 @@ impl TextBufferExt2 for gtk::TextBuffer {
         self.begin_user_action();
         self.delete(&mut start, &mut end);
         self.insert_range(
-            &mut self.get_iter_at_mark(&mark_insert),
+            &mut self.iter_at_mark(&mark_insert),
             &other.start_iter(),
             &other.end_iter(),
         );
         self.end_user_action();
 
         // move the cursor to the expected location and restore equivalent selection
-        let mut cursor = self.get_iter_at_mark(&mark_insert);
+        let mut cursor = self.iter_at_mark(&mark_insert);
         if add_beginning_nl {
             cursor.forward_line();
         }

@@ -33,7 +33,7 @@ impl TextBufferMd for gtk::TextBuffer {
         // add newline at end if needed
         let mut end = self.end_iter();
         let mut start = end.clone();
-        if start.backward_char() && self.get_text(&start, &end, false).ne(NEWLINE) {
+        if start.backward_char() && self.text(&start, &end, false).ne(NEWLINE) {
             self.insert(&mut end, NEWLINE);
         }
 
@@ -80,7 +80,7 @@ impl TextBufferMd for gtk::TextBuffer {
             }
 
             // closing tags before new opening tags
-            let off_tags = it.get_toggled_tags(false);
+            let off_tags = it.toggled_tags(false);
             if has_image {
                 for tag in &off_tags {
                     if let Some(image) = tag.get_image() {
@@ -141,7 +141,7 @@ impl TextBufferMd for gtk::TextBuffer {
                 }
             }
 
-            let on_tags = it.get_toggled_tags(true);
+            let on_tags = it.toggled_tags(true);
             let mut handle_image = false;
             let mut handle_link = false;
             // check first if we enter an unformatted block
@@ -446,7 +446,7 @@ impl TextBufferMd for gtk::TextBuffer {
     fn convert_colors(&self, tag: &str, pos_start: i32) {
         let mut offset = pos_start;
         while let Some((start_tag_start, start_tag_end)) =
-            self.get_iter_at_offset(offset).forward_search(
+            self.iter_at_offset(offset).forward_search(
                 TextTagTable::md_start_tag(tag).unwrap(),
                 gtk::TextSearchFlags::VISIBLE_ONLY,
                 None,

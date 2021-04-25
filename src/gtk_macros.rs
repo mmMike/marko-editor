@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! builder_get {
     ($builder:ident($name:tt)) => {
-        $builder.get_object($name).expect(&format!("Builder couldn't get {}", $name))
+        $builder.object($name).expect(&format!("Builder couldn't get {}", $name))
     };
 }
 

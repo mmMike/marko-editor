@@ -22,7 +22,7 @@ pub struct Settings {
 
 impl Settings {
     pub fn new() -> Self {
-        let mut settings_file = glib::get_user_config_dir();
+        let mut settings_file = glib::user_config_dir();
         settings_file.push(APP_NAME);
         fs::create_dir_all(settings_file.as_path()).unwrap_or_else(|why| {
             println!("! {:?}", why.kind());

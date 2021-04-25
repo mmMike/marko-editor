@@ -464,14 +464,14 @@ impl TextView {
     }
 
     pub fn scroll_to(&self, line: i32) {
-        if let Some(mut iter) = self.textview.buffer().get_iter_at_line(line) {
+        if let Some(mut iter) = self.textview.buffer().iter_at_line(line) {
             self.textview.scroll_to_iter(&mut iter, 0.05, true, 0., 0.1);
         }
     }
 
     pub fn scroll_to_top_bottom(&self, to_top: bool) {
         let line = if to_top { 0 } else { self.textview.buffer().line_count() - 1 };
-        if let Some(mut iter) = self.textview.buffer().get_iter_at_line(line) {
+        if let Some(mut iter) = self.textview.buffer().iter_at_line(line) {
             self.textview.scroll_to_iter(&mut iter, 0.05, true, 0., 0.1);
         }
     }
@@ -490,10 +490,10 @@ impl TextView {
     }
 
     fn buffer_do_insert_text(&self, values: &[Value]) -> Option<Value> {
-        let buffer = &values[0].get::<gtk::TextBuffer>().unwrap().unwrap();
-        let iter = &values[1].get::<gtk::TextIter>().unwrap().unwrap();
-        let _text = values[2].get::<&str>().unwrap().unwrap();
-        let count = values[3].get::<i32>().unwrap().unwrap();
+        let buffer = &values[0].get::<gtk::TextBuffer>().unwrap();
+        let iter = &values[1].get::<gtk::TextIter>().unwrap();
+        let _text = values[2].get::<&str>().unwrap();
+        let count = values[3].get::<i32>().unwrap();
 
         let mut start = iter.clone();
         start.backward_chars(count);
@@ -656,7 +656,7 @@ impl TextView {
         handler.connect_drop({
             let this = self.clone();
             move |_drop, value, x, y| {
-                if let Ok(Some(link)) = value.get::<&str>() {
+                if let Ok(link) = value.get::<&str>() {
                     this.drop_link(link, x, y);
                     return true;
                 }
@@ -670,13 +670,13 @@ impl TextView {
     fn drop_link(&self, link: &str, x: f64, y: f64) {
         let (_, by) =
             self.textview.window_to_buffer_coords(gtk::TextWindowType::Text, x as i32, y as i32);
-        let line_start = self.textview.get_line_at_y(by).0;
+        let line_start = self.textview.line_at_y(by).0;
         let buffer = self.textview.buffer();
         let mut line_end = line_start.clone();
         if !line_end.ends_line() {
             line_end.forward_to_line_end();
         }
-        let text = buffer.get_text(&line_start, &line_end, false);
+        let text = buffer.text(&line_start, &line_end, false);
         buffer.begin_user_action();
         if !text.is_empty() {
             buffer.insert(&mut line_end, NEWLINE);
@@ -764,7 +764,7 @@ impl TextView {
         let clear = |start: &gtk::TextIter, end: &gtk::TextIter| {
             // Remove overlapping paragraph tags on the whole paragraph
             for line in start.line()..end.line() + 1 {
-                if let Some(line_iter) = self.buffer.get_iter_at_line(line) {
+                if let Some(line_iter) = self.buffer.iter_at_line(line) {
                     for tag in line_iter.tags() {
                         if tag.get_par_format().is_some() {
                             let mut line_end = line_iter.clone();
@@ -791,12 +791,12 @@ impl TextView {
         if let Some(data) = link_data {
             let buffer = &self.buffer;
 
-            let mut start = buffer.get_iter_at_mark(&self.link_start);
-            let mut end = buffer.get_iter_at_mark(&self.link_end);
+            let mut start = buffer.iter_at_mark(&self.link_start);
+            let mut end = buffer.iter_at_mark(&self.link_end);
             let tags = start.tags();
             buffer.delete(&mut start, &mut end);
             buffer.insert(&mut end, &data.text);
-            start = buffer.get_iter_at_mark(&self.link_start);
+            start = buffer.iter_at_mark(&self.link_start);
 
             let tag = if data.is_image {
                 buffer.create_image_tag(&data.link)
@@ -861,7 +861,7 @@ impl TextView {
 
         self.buffer.move_mark(&self.link_start, &start);
         self.buffer.move_mark(&self.link_end, &end);
-        let text = String::from(self.buffer.get_text(&start, &end, false).as_str());
+        let text = String::from(self.buffer.text(&start, &end, false).as_str());
 
         let old_link = LinkData { text, link, is_image };
         self.search_bar.hide();
@@ -979,7 +979,7 @@ impl TextView {
         let mut line = 0;
         // let start = Instant::now();
         loop {
-            for tag in &line_iter.get_toggled_tags(true) {
+            for tag in &line_iter.toggled_tags(true) {
                 if let Some(par_format) = &tag.get_par_format() {
                     if let Some(level) = Tag::header_level(par_format) {
                         if level <= max_level {
@@ -993,7 +993,7 @@ impl TextView {
                                         &format!(
                                             "{}{}",
                                             "  ".repeat((level - 1) as usize),
-                                            self.buffer.get_text(&line_iter, &line_end, false)
+                                            self.buffer.text(&line_iter, &line_end, false)
                                         ),
                                     ),
                                     (1, &line),

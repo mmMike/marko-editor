@@ -132,8 +132,8 @@ impl MainWindow {
             let t = this.ui.text_view.clone();
             move |s, path, _col| {
                 let model = s.model().unwrap();
-                if let Some(iter) = model.get_iter(path) {
-                    let line = model.get(&iter, 1).get::<i32>().unwrap().unwrap();
+                if let Some(iter) = model.iter(path) {
+                    let line = model.get(&iter, 1).get::<i32>().unwrap();
                     t.scroll_to(line);
                 }
             }
@@ -530,7 +530,7 @@ impl MainWindow {
             let t = textview_md.clone();
             move |_| {
                 let buffer = t.buffer();
-                let text = buffer.get_text(&buffer.start_iter(), &buffer.end_iter(), false);
+                let text = buffer.text(&buffer.start_iter(), &buffer.end_iter(), false);
                 s.ui.text_view.insert_markdown(text.as_str(), false);
             }
         });
@@ -543,7 +543,7 @@ impl MainWindow {
             let t = textview_md.clone();
             move |_| {
                 let buffer = t.buffer();
-                let text = buffer.get_text(&buffer.start_iter(), &buffer.end_iter(), false);
+                let text = buffer.text(&buffer.start_iter(), &buffer.end_iter(), false);
                 s.ui.text_view.insert_markdown(text.as_str(), true);
                 d.hide();
             }
@@ -556,7 +556,7 @@ impl MainWindow {
             move |_| {
                 let text = s.ui.text_view.to_markdown();
                 let buffer = t.buffer();
-                buffer.get_text(&buffer.start_iter(), &buffer.end_iter(), false);
+                buffer.text(&buffer.start_iter(), &buffer.end_iter(), false);
                 buffer.delete(&mut buffer.start_iter(), &mut buffer.end_iter());
                 buffer.insert(&mut buffer.start_iter(), text.as_str());
             }
@@ -640,7 +640,7 @@ impl MainWindow {
     }
 
     fn toggle_dark_theme(&self) {
-        if let Some(settings) = gtk::Settings::get_default() {
+        if let Some(settings) = gtk::Settings::default() {
             settings.set_gtk_theme_name(Some("Adwaita"));
 
             let current = settings.is_gtk_application_prefer_dark_theme();
