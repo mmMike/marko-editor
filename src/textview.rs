@@ -741,6 +741,21 @@ impl TextView {
             b.end_user_action();
         };
 
+        // links should be formatted completely
+        // ToDo: a possible selection should be considered
+        let start = self.buffer.get_insert_iter();
+        if let Some((_, tag)) = self.buffer.get_link_at_iter(&start) {
+            if let Some((start, end)) = self.buffer.get_current_tag_bounds(&tag) {
+                toggle_tag(&start, &end);
+                return;
+            }
+        } else if let Some((_, tag)) = self.buffer.get_image_at_iter(&start) {
+            if let Some((start, end)) = self.buffer.get_current_tag_bounds(&tag) {
+                toggle_tag(&start, &end);
+                return;
+            }
+        }
+
         if let Some((start, mut end)) = b.selection_bounds() {
             if end.starts_line() {
                 end.backward_char();

@@ -28,7 +28,9 @@ pub fn get_file_name(link: &str) -> String {
 pub trait TextBufferExt2 {
     fn clear(&self);
 
+    // Current word for cursor at start or in word, NOT at the end.
     fn get_current_word_bounds(&self) -> Option<(TextIter, TextIter)>;
+    fn get_current_tag_bounds(&self, tag: &gtk::TextTag) -> Option<(TextIter, TextIter)>;
 
     fn get_insert_iter(&self) -> TextIter;
 
@@ -59,9 +61,8 @@ impl TextBufferExt2 for gtk::TextBuffer {
         self.end_irreversible_action();
     }
 
-    // Current word for cursor at start or in word, NOT at the end.
     fn get_current_word_bounds(&self) -> Option<(TextIter, TextIter)> {
-        let mut start = self.iter_at_mark(&self.get_insert());
+        let mut start = self.get_insert_iter();
         let mut end = start.clone();
         if start.starts_word() {
             end.forward_word_end();
@@ -72,6 +73,22 @@ impl TextBufferExt2 for gtk::TextBuffer {
             return None;
         }
         Some((start, end))
+    }
+
+    fn get_current_tag_bounds(&self, tag: &gtk::TextTag) -> Option<(TextIter, TextIter)> {
+        let mut start = self.get_insert_iter();
+        if start.has_tag(tag) || start.ends_tag(Some(tag)) {
+            let mut end = start.clone();
+            if !start.starts_tag(Some(tag)) {
+                start.backward_to_tag_toggle(Some(tag));
+            }
+            if !end.ends_tag(Some(tag)) {
+                end.forward_to_tag_toggle(Some(tag));
+            }
+            Some((start, end))
+        } else {
+            None
+        }
     }
 
     fn get_insert_iter(&self) -> TextIter {
