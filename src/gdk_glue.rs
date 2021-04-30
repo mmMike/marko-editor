@@ -1,4 +1,4 @@
-use gtk::StyleContextExt;
+use gtk::prelude::StyleContextExt;
 
 pub trait Serialize<T> {
     fn deserialize(data: &str) -> Option<T>;

@@ -7,7 +7,7 @@
 */
 
 use crate::texttag::Tag;
-use gtk::TextTagExt;
+use gtk::prelude::TextTagExt;
 
 #[derive(Debug)]
 pub struct TextTagTable {

@@ -3,7 +3,6 @@ use gtk::gio::SimpleAction;
 use gtk::glib;
 use gtk::prelude::*;
 use gtk::EventControllerKey;
-use gtk::WidgetExt;
 use gtk::{FileChooserAction, FileChooserDialog, ResponseType};
 
 use crate::data::Data;

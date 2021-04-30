@@ -1,5 +1,5 @@
 use crate::textbufferext::TextBufferExt2;
-use gtk::TextViewExt;
+use gtk::prelude::TextViewExt;
 
 pub trait TextViewExt2 {
     fn get_iter_at_coord(&self, x: f64, y: f64) -> Option<gtk::TextIter>;

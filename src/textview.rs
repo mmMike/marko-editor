@@ -12,12 +12,7 @@ use glib::signal::Inhibit;
 use gtk::glib::Value;
 use gtk::prelude::*;
 use gtk::prelude::{Cast, ObjectExt};
-use gtk::ButtonExt;
 use gtk::EventControllerKey;
-use gtk::GestureSingleExt;
-use gtk::TextBufferExt;
-use gtk::TextViewExt;
-use gtk::WidgetExt;
 
 use regex::Regex;
 

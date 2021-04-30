@@ -2,9 +2,9 @@ use crate::texttag::{ParFormat, Tag, TextTagExt2};
 use crate::texttagtable::TextTagTable;
 
 use crate::textbuffermd::NEWLINE;
-use gtk::TextBufferExt;
+use gtk::prelude::TextBufferExt;
+use gtk::prelude::TextTagExt;
 use gtk::TextIter;
-use gtk::TextTagExt;
 use std::path::PathBuf;
 
 pub const LINK_START: &str = "LINK:";

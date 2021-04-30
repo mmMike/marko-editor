@@ -1,7 +1,7 @@
 use crate::textbufferext::TextBufferExt2;
 use crate::texttag::{Tag, TextTagExt2};
 use crate::texttagtable::TextTagTable;
-use gtk::TextBufferExt;
+use gtk::prelude::TextBufferExt;
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser};
 
 type CTag<'a> = pulldown_cmark::Tag<'a>;

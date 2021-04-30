@@ -1,5 +1,5 @@
 use crate::textbufferext::{IMAGE_START, LINK_START};
-use gtk::TextTagExt;
+use gtk::prelude::TextTagExt;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum CharFormat {
