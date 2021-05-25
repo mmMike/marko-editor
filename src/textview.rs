@@ -195,7 +195,7 @@ impl SearchBar {
             access_view_cb: Rc::new(Box::new(access_view_cb)),
         };
         this.search_bar.connect_entry(&this.edt_search);
-        this.search_bar.connect_property_search_mode_enabled_notify(connect!(this.on_enabled()));
+        this.search_bar.connect_search_mode_enabled_notify(connect!(this.on_enabled()));
 
         this.edt_search.connect_activate(connect!(this.on_next_match(false)));
         this.edt_search.connect_next_match(connect!(this.on_next_match(false)));
@@ -337,8 +337,10 @@ impl Colors {
     }
 
     pub fn update(&mut self, style_context: &gtk::StyleContext, prefer_dark: bool) {
-        self.outline_none = GetColor::get_color(style_context, true, gtk::StateFlags::LINK);
-        self.outline_h1 = GetColor::get_color(style_context, true, gtk::StateFlags::SELECTED);
+        self.outline_none = GetColor::get_color(style_context, true, gtk::StateFlags::LINK)
+            .unwrap_or(gdk::RGBA::white());
+        self.outline_h1 = GetColor::get_color(style_context, true, gtk::StateFlags::SELECTED)
+            .unwrap_or(gdk::RGBA::blue());
 
         let factor = if prefer_dark { -15. } else { 15. };
 

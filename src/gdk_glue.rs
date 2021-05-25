@@ -31,21 +31,22 @@ impl Serialize<gdk::Rectangle> for gdk::Rectangle {
 }
 
 pub trait GetColor {
-    fn get_color(&self, is_background: bool, flags: gtk::StateFlags) -> gdk::RGBA;
+    fn get_color(&self, is_background: bool, flags: gtk::StateFlags) -> Option<gdk::RGBA>;
 }
 
 impl GetColor for gtk::StyleContext {
-    fn get_color(&self, is_background: bool, flags: gtk::StateFlags) -> gdk::RGBA {
+    fn get_color(&self, is_background: bool, flags: gtk::StateFlags) -> Option<gdk::RGBA> {
         let ctx = self.clone();
         ctx.set_state(flags);
         let mut s = gtk::cairo::ImageSurface::create(gtk::cairo::Format::ARgb32, 2, 2).unwrap();
-        let c = gtk::cairo::Context::new(&s);
+        let c = gtk::cairo::Context::new(&s).ok()?;
         if is_background {
             gtk::render_background(&ctx, &c, 0f64, 0f64, 1f64, 1f64);
         } else {
             gtk::render_line(&ctx, &c, 0f64, 0f64, 1f64, 1f64);
         }
         drop(c);
+
         let data = s.data().unwrap();
         let slice = &data[0..4];
 
@@ -57,12 +58,12 @@ impl GetColor for gtk::StyleContext {
             }
         };
 
-        gdk::RGBA {
+        Some(gdk::RGBA {
             red: transform(slice[2] as f32),
             green: transform(slice[1] as f32),
             blue: transform(slice[0] as f32),
             alpha: 1f32,
-        }
+        })
     }
 }
 
