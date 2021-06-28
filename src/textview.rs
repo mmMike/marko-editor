@@ -338,9 +338,9 @@ impl Colors {
 
     pub fn update(&mut self, style_context: &gtk::StyleContext, prefer_dark: bool) {
         self.outline_none = GetColor::get_color(style_context, true, gtk::StateFlags::LINK)
-            .unwrap_or(gdk::RGBA::white());
+            .unwrap_or_else(gdk::RGBA::white);
         self.outline_h1 = GetColor::get_color(style_context, true, gtk::StateFlags::SELECTED)
-            .unwrap_or(gdk::RGBA::blue());
+            .unwrap_or_else(gdk::RGBA::blue);
 
         let factor = if prefer_dark { -15. } else { 15. };
 
