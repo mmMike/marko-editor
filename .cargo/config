@@ -1,2 +1,5 @@
 [build]
 rustflags = ["-lX11"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-lX11", "-L/opt/homebrew/lib"]

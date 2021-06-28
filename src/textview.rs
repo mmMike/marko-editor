@@ -7,8 +7,8 @@ use crate::{builder_get, connect, connect_fwd1};
 
 extern crate html_escape;
 
-use gdk4_x11::glib;
-use glib::signal::Inhibit;
+use gtk::glib;
+use gtk::glib::signal::Inhibit;
 use gtk::glib::Value;
 use gtk::prelude::*;
 use gtk::prelude::{Cast, ObjectExt};

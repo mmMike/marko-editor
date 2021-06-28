@@ -1,5 +1,5 @@
+#[cfg(feature = "default")]
 use gdk4_x11::{X11Display, X11Surface};
-use gtk::prelude::*;
 
 pub trait WindowGeometry {
     fn get_window_geometry(&self) -> Option<gdk::Rectangle>;
@@ -7,6 +7,7 @@ pub trait WindowGeometry {
     fn get_window_screen(&self) -> Option<gdk::Rectangle>;
 }
 
+#[cfg(feature = "default")]
 impl<W: IsA<gtk::Window> + IsA<gtk::Native>> WindowGeometry for W {
     fn get_window_geometry(&self) -> Option<gdk::Rectangle> {
         let surface = self.surface()?;

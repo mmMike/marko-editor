@@ -3,8 +3,11 @@ use configparser::ini::Ini;
 
 use anyhow::{anyhow, Result};
 
+#[cfg(feature = "default")]
 use crate::gdk_glue::Serialize;
+#[cfg(feature = "default")]
 use crate::gdk_x11_glue::WindowGeometry;
+
 use crate::res::APP_NAME;
 use gtk::glib;
 use gtk::glib::IsA;
@@ -67,40 +70,50 @@ impl Settings {
 
     pub fn store_geometry_property<W: IsA<gtk::Window> + IsA<gtk::Native>>(
         &self,
-        window: &W,
-        key: &str,
-        value: &str,
+        _window: &W,
+        _key: &str,
+        _value: &str,
     ) {
-        if let Some(screen) = window.get_window_screen() {
-            self.set(key, screen.serialize().as_str(), value);
+        #[cfg(feature = "default")]
+        if let Some(screen) = _window.get_window_screen() {
+            self.set(_key, screen.serialize().as_str(), _value);
             self.write().unwrap();
         }
     }
 
     pub fn read_geometry_property<W: IsA<gtk::Window> + IsA<gtk::Native>>(
         &self,
-        window: &W,
-        key: &str,
+        _window: &W,
+        _key: &str,
     ) -> Option<String> {
-        if let Some(screen) = window.get_window_screen() {
-            return self.get(key, screen.serialize().as_str());
+        #[cfg(feature = "default")]
+        if let Some(screen) = _window.get_window_screen() {
+            return self.get(_key, screen.serialize().as_str());
         } else {
             None
         }
+
+        None
     }
 
-    pub fn store_geometry<W: IsA<gtk::Window> + IsA<gtk::Native>>(&self, window: &W, key: &str) {
+    pub fn store_geometry<W: IsA<gtk::Window> + IsA<gtk::Native>>(&self, _window: &W, _key: &str) {
+        #[cfg(feature = "default")]
         if let Some(rect) = window.get_window_geometry() {
-            self.store_geometry_property(window, key, rect.serialize().as_str());
+            self.store_geometry_property(_window, _key, rect.serialize().as_str());
         }
     }
 
-    pub fn restore_geometry<W: IsA<gtk::Window> + IsA<gtk::Native>>(&self, window: &W, key: &str) {
-        match self.read_geometry_property(window, key) {
+    pub fn restore_geometry<W: IsA<gtk::Window> + IsA<gtk::Native>>(
+        &self,
+        _window: &W,
+        _key: &str,
+    ) {
+        #[cfg(feature = "default")]
+        match self.read_geometry_property(_window, _key) {
             None => {}
             Some(data) => {
                 if let Some(rect) = gdk::Rectangle::deserialize(&*data) {
-                    if let Some(current) = window.get_window_geometry() {
+                    if let Some(current) = _window.get_window_geometry() {
                         if current != rect {
                             window.set_window_geometry(&rect);
                         }

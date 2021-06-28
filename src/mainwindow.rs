@@ -1,17 +1,21 @@
+#[cfg(feature = "default")]
 extern crate x11;
+
+#[cfg(feature = "default")]
+use crate::gdk_x11_glue::WindowGeometry;
+
 use gtk::gio::SimpleAction;
 use gtk::glib;
 use gtk::prelude::*;
 use gtk::EventControllerKey;
-use gtk::{FileChooserAction, FileChooserDialog, ResponseType};
 
 use crate::data::Data;
-use crate::gdk_x11_glue::WindowGeometry;
 use crate::res::APP_NAME;
 use crate::settings::Settings;
 use crate::texttag::{CharFormat, ParFormat};
 use crate::textview::TextView;
 use crate::{builder_get, connect, connect_action_plain};
+use gtk::{FileChooserAction, FileChooserDialog, ResponseType};
 
 use std::cell::RefCell;
 use std::fs;
@@ -563,10 +567,10 @@ impl MainWindow {
     }
 
     fn act_markdown_dlg(&self) {
-        if let Some(geometry) = self.ui.window.get_window_geometry() {
-            self.ui.dlg_md.set_default_height(geometry.height - 80);
-            self.ui.dlg_md.set_default_width(geometry.width - 60);
-        }
+        let height = self.ui.window.size(gtk::Orientation::Vertical);
+        let width = self.ui.window.size(gtk::Orientation::Horizontal);
+        self.ui.dlg_md.set_default_height(height - 80);
+        self.ui.dlg_md.set_default_width(width - 60);
         self.ui.dlg_md.show();
     }
 

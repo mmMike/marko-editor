@@ -4,10 +4,13 @@ version = "0.1.0"
 authors = ["Michael <info@marko-editor.com>"]
 edition = "2018"
 
+[features]
+default = ["x11", "gdk4-x11"]
+
 [dependencies]
 reqwest = { version = "0.11.*", features = ["blocking"] }
 configparser = "2.0.*"
-x11 = "2.18.*"
+x11 = { version = "2.18.*", optional = true }
 anyhow = "1.0.*"
 bitflags = "1.2.*"
 log = "0.4"
@@ -28,3 +31,4 @@ package = "gdk4"
 [dependencies.gdk4-x11]
 git = "https://github.com/gtk-rs/gtk4-rs"
 package = "gdk4-x11"
+optional = true
