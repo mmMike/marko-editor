@@ -89,8 +89,6 @@ impl Settings {
         #[cfg(feature = "default")]
         if let Some(screen) = _window.get_window_screen() {
             return self.get(_key, screen.serialize().as_str());
-        } else {
-            None
         }
 
         None
@@ -98,7 +96,7 @@ impl Settings {
 
     pub fn store_geometry<W: IsA<gtk::Window> + IsA<gtk::Native>>(&self, _window: &W, _key: &str) {
         #[cfg(feature = "default")]
-        if let Some(rect) = window.get_window_geometry() {
+        if let Some(rect) = _window.get_window_geometry() {
             self.store_geometry_property(_window, _key, rect.serialize().as_str());
         }
     }
@@ -115,7 +113,7 @@ impl Settings {
                 if let Some(rect) = gdk::Rectangle::deserialize(&*data) {
                     if let Some(current) = _window.get_window_geometry() {
                         if current != rect {
-                            window.set_window_geometry(&rect);
+                            _window.set_window_geometry(&rect);
                         }
                     }
                 }

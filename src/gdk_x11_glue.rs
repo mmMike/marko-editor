@@ -1,3 +1,7 @@
+use gdk::glib::Cast;
+use gdk::glib::IsA;
+use gtk::prelude::{GtkWindowExt, NativeExt};
+
 #[cfg(feature = "default")]
 use gdk4_x11::{X11Display, X11Surface};
 

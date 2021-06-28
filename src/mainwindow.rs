@@ -1,9 +1,6 @@
 #[cfg(feature = "default")]
 extern crate x11;
 
-#[cfg(feature = "default")]
-use crate::gdk_x11_glue::WindowGeometry;
-
 use gtk::gio::SimpleAction;
 use gtk::glib;
 use gtk::prelude::*;
