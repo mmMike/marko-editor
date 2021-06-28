@@ -1,9 +1,9 @@
-use gdk::glib::Cast;
-use gdk::glib::IsA;
-use gtk::prelude::{GtkWindowExt, NativeExt};
-
+#[cfg(feature = "default")]
+use gdk::glib::{Cast, IsA};
 #[cfg(feature = "default")]
 use gdk4_x11::{X11Display, X11Surface};
+#[cfg(feature = "default")]
+use gtk::prelude::{GtkWindowExt, NativeExt};
 
 pub trait WindowGeometry {
     fn get_window_geometry(&self) -> Option<gdk::Rectangle>;
