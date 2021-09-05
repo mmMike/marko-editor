@@ -7,6 +7,7 @@ use crate::{builder_get, connect, connect_fwd1};
 
 extern crate html_escape;
 
+use gtk::gio::File;
 use gtk::glib;
 use gtk::glib::signal::Inhibit;
 use gtk::glib::Value;
@@ -621,11 +622,8 @@ impl TextView {
                     // a drag leaves a one char selection, this should be deleted
                     let cursor = this.buffer.get_insert_iter();
                     this.buffer.select_range(&cursor, &cursor);
-
-                    let bytes = glib::Bytes::from(link.as_bytes());
-                    // https://www.iana.org/assignments/media-types/text/uri-list
-                    let content = gdk::ContentProvider::for_bytes("text/uri-list", &bytes);
-                    return Some(content);
+                    let file = File::for_uri(&link);
+                    return Some(gdk::ContentProvider::for_value(&file.to_value()));
                 }
                 drag_source.drag_cancel();
                 None

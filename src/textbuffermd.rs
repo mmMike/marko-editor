@@ -478,7 +478,7 @@ impl TextBufferMd for gtk::TextBuffer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gtk::TextTagExt;
+    use gtk::prelude::TextTagExt;
 
     #[allow(dead_code)]
     fn cb(
@@ -487,7 +487,7 @@ mod tests {
         _start: &gtk::TextIter,
         _end: &gtk::TextIter,
     ) {
-        println!("apply tag {:?} {}", tag, tag.get_property_name().unwrap().as_str());
+        println!("apply tag {:?} {}", tag, tag.name().unwrap().as_str());
     }
 
     fn buffer_new() -> gtk::TextBuffer {
