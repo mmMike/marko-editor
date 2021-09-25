@@ -421,7 +421,7 @@ impl TextBufferMd for gtk::TextBuffer {
             end.backward_char();
             self.apply_tag(&self.tag_table().lookup(tag_name).unwrap(), &start, &end);
         } else {
-            self.apply_tag(&self.tag_table().lookup(tag_name).unwrap(), &start, &iter);
+            self.apply_tag(&self.tag_table().lookup(tag_name).unwrap(), &start, iter);
         }
     }
 
@@ -439,7 +439,7 @@ impl TextBufferMd for gtk::TextBuffer {
         } else {
             self.create_image_tag(format!("{} \"{}\"", image, title).as_str())
         };
-        self.apply_tag(&tag, &start, &iter);
+        self.apply_tag(&tag, &start, iter);
     }
 
     // Convert markup for colors to the corresponding formatting and delete the markup

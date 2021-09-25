@@ -39,7 +39,7 @@ impl App {
     fn create_window(app: &gtk::Application) -> MainWindow {
         let data = Rc::new(Data::new());
         let settings = Rc::new(Settings::new());
-        MainWindow::new(&app, &data, &settings)
+        MainWindow::new(app, &data, &settings)
     }
 
     pub fn run(&self, argv: &[String]) -> i32 {

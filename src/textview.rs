@@ -642,7 +642,7 @@ impl TextView {
         handler.connect_accept({
             move |_target, drop| {
                 if let Some(f) = drop.formats() {
-                    return f.contain_mime_type(&mime_moz) || f.contain_mime_type(&mime_uri);
+                    return f.contain_mime_type(mime_moz) || f.contain_mime_type(mime_uri);
                 }
                 false
             }
@@ -722,16 +722,16 @@ impl TextView {
             let tag = b.tag_table().lookup(tag_str).unwrap();
             b.begin_user_action();
             if start.has_tag(&tag) {
-                b.remove_tag(&tag, &start, &end);
+                b.remove_tag(&tag, start, end);
             } else {
                 if COLORS.contains(&format) {
                     for c in &COLORS {
-                        let tag = b.tag_table().lookup(Tag::from_char_format(&c)).unwrap();
-                        b.remove_tag(&tag, &start, &end);
+                        let tag = b.tag_table().lookup(Tag::from_char_format(c)).unwrap();
+                        b.remove_tag(&tag, start, end);
                     }
                 }
 
-                b.apply_tag(&tag, &start, &end);
+                b.apply_tag(&tag, start, end);
             }
             b.end_user_action();
         };
@@ -786,7 +786,7 @@ impl TextView {
                 }
             }
 
-            self.buffer.remove_all_tags(&start, &end);
+            self.buffer.remove_all_tags(start, end);
         };
 
         if let Some((start, end)) = self.buffer.selection_bounds() {

@@ -137,7 +137,7 @@ impl TextBufferExt2 for gtk::TextBuffer {
         } else {
             self.create_link_tag(format!("{} \"{}\"", link, title).as_str())
         };
-        self.apply_tag(&tag, &start, &iter);
+        self.apply_tag(&tag, &start, iter);
     }
 
     fn create_link_tag(&self, link: &str) -> gtk::TextTag {
@@ -179,11 +179,11 @@ impl TextBufferExt2 for gtk::TextBuffer {
     fn apply_paragraph_format(&self, format: Option<ParFormat>, start: &TextIter, end: &TextIter) {
         self.begin_user_action();
 
-        self.remove_all_tags(&start, &end);
+        self.remove_all_tags(start, end);
         if let Some(f) = format {
             let tag_name = Tag::from_par_format(&f);
             let tag = &self.tag_table().lookup(tag_name).unwrap();
-            self.apply_tag(tag, &start, &end);
+            self.apply_tag(tag, start, end);
         }
 
         self.end_user_action();
